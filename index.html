@@ -1202,7 +1202,7 @@ footer .ft-bottom {
     <div class="map-stage">
       <div class="site-plan" id="sitePlan">
         <img class="site-plan-img" id="sitePlanImg" alt="Lowell Heights site plan"
-             src="community-map.png">
+             src="Community-map.png">
         <div class="site-plan-pins" id="sitePlanPins"></div>
       </div>
       <div class="legend">
@@ -2105,7 +2105,8 @@ document.getElementById("drawerClose")?.addEventListener("click", () => {
   if (empty) empty.style.display = "block";
 });
 
-const SITE_PLAN_IMAGE_URL = "community-map.png";
+const SITE_PLAN_IMAGE_URL = "Community-map.png";
+const SITE_PLAN_FALLBACKS = ["Community-map.png", "community-map.png", "community-map.jpg"];
 
 function rebuildMapMarkers() {
   const layer = document.getElementById("sitePlanPins");
@@ -2114,8 +2115,16 @@ function rebuildMapMarkers() {
 
   const img = document.getElementById("sitePlanImg");
   if (img) {
-    if (SITE_PLAN_IMAGE_URL) img.src = SITE_PLAN_IMAGE_URL;
     img.style.display = "block";
+    if (!img.dataset.boundError) {
+      img.dataset.boundError = "1";
+      let fi = 0;
+      img.onerror = function () {
+        fi += 1;
+        if (fi < SITE_PLAN_FALLBACKS.length) img.src = SITE_PLAN_FALLBACKS[fi];
+      };
+    }
+    img.src = SITE_PLAN_IMAGE_URL;
   }
 
   Object.keys(unitData).forEach(id => {
