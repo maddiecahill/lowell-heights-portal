@@ -52,7 +52,7 @@ a { color: inherit; }
 
 /* ─── Topbar ─── */
 .topbar {
-  position: sticky; top: 0; z-index: 50;
+  position: sticky; top: 0; z-index: 2000;
   height: 76px;
   background: rgba(4, 24, 32, 0.97);
   color: var(--white);
@@ -396,67 +396,91 @@ a { color: inherit; }
 /* Map */
 .map-stage {
   position: relative;
-  height: 640px;
+  height: auto;
+  min-height: 520px;
   overflow: hidden;
-  background: #d4d0c7;
   border: 1px solid var(--line);
+  background: #e8e4db;
 }
-.map-placeholder {
+/* Site plan uses Map X / Map Y percentages from the Green City sheet */
+.site-plan {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* matches 1536×864 site plan */
+  background: #e5e1d8;
+  overflow: hidden;
+}
+.site-plan img.site-plan-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(150deg, #d0ccc3, #c2beb4);
+  object-fit: fill; /* Map X/Y were calibrated to this exact frame */
+  object-position: center;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+.site-plan-pins {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.lot-marker {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  margin-top: -14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 3px 10px rgba(4, 24, 32, 0.22);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-family: 'Work Sans', sans-serif;
+  cursor: pointer;
+  z-index: 3;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
+.lot-marker:hover {
+  transform: scale(1.15);
+  z-index: 5;
+  box-shadow: 0 6px 18px rgba(4, 24, 32, 0.28);
+}
+.lot-marker.available { background: var(--lime); }
+.lot-marker.listed { background: var(--sage); }
+.lot-marker.pending { background: var(--sand); }
+.lot-marker.sold { background: var(--clay); }
+.lot-marker.model-home { background: var(--sage); }
+.lot-marker.reserved { background: var(--sand); }
+
 .legend {
   position: absolute;
-  left: 20px;
-  bottom: 20px;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1000;
   display: flex;
   gap: 14px;
   flex-wrap: wrap;
-  background: rgba(254, 252, 248, 0.95);
+  background: rgba(254, 252, 248, 0.96);
   border: 1px solid var(--line);
   padding: 11px 14px;
   font-size: 10px;
   color: var(--muted);
+  box-shadow: 0 4px 16px rgba(4,24,32,0.06);
 }
 .legend span { display: flex; align-items: center; gap: 6px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; }
-.pin {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2px solid white;
-  box-shadow: 0 4px 12px rgba(4, 24, 32, 0.18);
-  color: white;
-  font-size: 9px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s;
-  font-family: 'Work Sans', sans-serif;
-}
-.pin:hover { transform: translate(-50%, -50%) scale(1.12); }
-.pin.available { background: var(--lime); }
-.pin.listed { background: var(--sage); }
-.pin.pending { background: var(--sand); }
-.pin.sold { background: var(--clay); }
 
 .property-drawer {
   position: absolute;
   top: 0; right: 0;
   height: 100%;
-  width: min(380px, 40%);
+  width: min(380px, 42%);
   background: rgba(254, 252, 248, 0.98);
   border-left: 1px solid var(--line);
   padding: 28px;
@@ -464,6 +488,7 @@ a { color: inherit; }
   transition: transform 0.28s ease;
   box-shadow: -16px 0 48px rgba(4, 24, 32, 0.08);
   overflow-y: auto;
+  z-index: 1100;
 }
 .property-drawer.open { transform: translateX(0); }
 .drawer-close {
@@ -471,9 +496,10 @@ a { color: inherit; }
   top: 16px; right: 16px;
   border: none;
   background: none;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   color: var(--muted);
+  line-height: 1;
 }
 .drawer-status {
   font-size: 10px;
@@ -540,14 +566,16 @@ a { color: inherit; }
 }
 .map-empty {
   position: absolute;
-  right: 24px;
-  top: 24px;
-  background: rgba(254, 252, 248, 0.95);
+  right: 20px;
+  top: 20px;
+  z-index: 4;
+  background: rgba(254, 252, 248, 0.96);
   border: 1px solid var(--line);
-  padding: 16px 18px;
+  padding: 14px 16px;
   font-size: 12px;
   color: var(--muted);
-  max-width: 200px;
+  max-width: 180px;
+  box-shadow: 0 4px 16px rgba(4,24,32,0.06);
 }
 
 /* Inventory */
@@ -902,14 +930,63 @@ a { color: inherit; }
 }
 
 footer {
-  text-align: center;
-  color: var(--muted-light);
-  font-size: 9px;
-  letter-spacing: 0.16em;
-  font-weight: 500;
+  background: var(--navy);
+  color: #c5d0d4;
   padding: 48px 0 40px;
+  margin-top: 0;
+  border-top: none;
+}
+footer .shell {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 40px;
+  align-items: start;
+}
+footer .ft-brand strong {
+  display: block;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 8px;
+}
+footer .ft-brand p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #96a6ab;
+  max-width: 320px;
+}
+footer .ft-col h4 {
+  font-size: 10px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  border-top: 1px solid var(--line);
+  color: var(--bronze);
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+footer .ft-col a, footer .ft-col span {
+  display: block;
+  font-size: 13px;
+  color: #c5d0d4;
+  text-decoration: none;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+footer .ft-col a:hover { color: #fff; }
+footer .ft-bottom {
+  grid-column: 1 / -1;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 11px;
+  color: #87999f;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+@media (max-width: 800px) {
+  footer .shell { grid-template-columns: 1fr; gap: 28px; }
 }
 
 /* Responsive */
@@ -975,8 +1052,7 @@ footer {
       <a href="#traffic">Traffic</a>
       <a href="#feedback">Feedback</a>
       <a href="#actions">Actions</a>
-      <a href="#decisions">Decisions</a>
-    </nav>
+          </nav>
     <div class="synced">Last synced · Aug 7, 2026 · 10:42 AM</div>
   </div>
 </header>
@@ -1094,26 +1170,24 @@ footer {
     <a href="#traffic"><div class="jump-title">Traffic</div><div class="jump-sub">Visits & trends</div></a>
     <a href="#feedback"><div class="jump-title">Buyer Feedback</div><div class="jump-sub">Sentiment & themes</div></a>
     <a href="#actions"><div class="jump-title">Action Items</div><div class="jump-sub">Open work</div></a>
-    <a href="#decisions"><div class="jump-title">Decisions</div><div class="jump-sub">Approvals required</div></a>
     <a href="#marketing"><div class="jump-title">Marketing</div><div class="jump-sub">Campaign activity</div></a>
-    <a href="#period"><div class="jump-title">Weekly Report</div><div class="jump-sub">Period summary</div></a>
   </nav>
 
-  <!-- Map -->
+  <!-- Map — site plan uses Map X / Map Y % from the Green City sheet -->
   <section id="map" class="section shell">
     <div class="section-head">
       <div>
         <div class="eyebrow">Community</div>
-        <h2>Interactive Map</h2>
+        <h2>Site Plan</h2>
       </div>
-      <p>● Available · ● Listed · ● Pending · ● Sold</p>
+      <p>Pins follow Green City Map X / Map Y · Click a lot for details</p>
     </div>
     <div class="map-stage">
-      <div class="map-placeholder">Community Map · Lowell Heights</div>
-      <button class="pin listed" style="left:28%;top:28%" data-unit="A3">A3</button>
-      <button class="pin available" style="left:36%;top:28%" data-unit="A4">A4</button>
-      <button class="pin listed" style="left:48%;top:48%" data-unit="B2">B2</button>
-      <button class="pin pending" style="left:60%;top:58%" data-unit="C5">C5</button>
+      <div class="site-plan" id="sitePlan">
+        <img class="site-plan-img" id="sitePlanImg" alt="Lowell Heights site plan"
+             src="community-map.jpg">
+        <div class="site-plan-pins" id="sitePlanPins"></div>
+      </div>
       <div class="legend">
         <span><i class="dot" style="background:var(--lime)"></i> Available</span>
         <span><i class="dot" style="background:var(--sage)"></i> Listed</span>
@@ -1213,12 +1287,13 @@ footer {
       </div>
       <div class="card">
         <span class="eyebrow">Traffic by Type</span>
-        <div class="row"><span>Open House</span><b>12</b></div>
-        <div class="row"><span>Appointment</span><b>7</b></div>
-        <div class="row"><span>Broker</span><b>3</b></div>
-        <div class="row"><span>Walk-In</span><b>2</b></div>
+        <div class="row traffic-type" data-type="Open House" style="cursor:pointer"><span>Open House</span><b id="tt-open">12</b></div>
+        <div class="row traffic-type" data-type="Appointment" style="cursor:pointer"><span>Appointment</span><b id="tt-appt">7</b></div>
+        <div class="row traffic-type" data-type="Broker" style="cursor:pointer"><span>Broker</span><b id="tt-broker">3</b></div>
+        <div class="row traffic-type" data-type="Walk-In" style="cursor:pointer"><span>Walk-In</span><b id="tt-walk">2</b></div>
       </div>
     </div>
+    <div class="card" id="trafficDetail" style="margin-top:16px;display:none"></div>
   </section>
 
   <!-- Feedback -->
@@ -1229,29 +1304,21 @@ footer {
         <h2>Buyer Feedback</h2>
       </div>
     </div>
-    <div class="grid2">
-      <div class="card">
-        <div class="quote">
-          <div class="quote-type"><span class="sentiment positive">Positive</span> · A3</div>
-          <q>Buyers loved the kitchen, natural light and overall finish quality.</q>
-          <div class="quote-date">Aug 6</div>
-        </div>
-        <div class="quote">
-          <div class="quote-type"><span class="sentiment concern">Concern</span> · C3</div>
-          <q>Parking felt tight for two larger vehicles and was the primary hesitation.</q>
-          <div class="quote-date">Aug 5</div>
-        </div>
-        <div class="quote">
-          <div class="quote-type"><span class="sentiment mixed">Neutral</span> · B2</div>
-          <q>Strong response to the floorplan; pricing was the main point of discussion.</q>
-          <div class="quote-date">Aug 4</div>
-        </div>
+    <div class="card" id="feedbackList">
+      <div class="quote">
+        <div class="quote-type"><span class="sentiment positive">Positive</span> · A3</div>
+        <q>Buyers loved the kitchen, natural light and overall finish quality.</q>
+        <div class="quote-date">Aug 6</div>
       </div>
-      <div class="card">
-        <div class="row"><span>Floorplans</span><span class="sentiment positive">Positive</span></div>
-        <div class="row"><span>Finishes</span><span class="sentiment positive">Positive</span></div>
-        <div class="row"><span>Pricing</span><span class="sentiment mixed">Mixed</span></div>
-        <div class="row"><span>Parking</span><span class="sentiment concern">Concern</span></div>
+      <div class="quote">
+        <div class="quote-type"><span class="sentiment concern">Concern</span> · C3</div>
+        <q>Parking felt tight for two larger vehicles and was the primary hesitation.</q>
+        <div class="quote-date">Aug 5</div>
+      </div>
+      <div class="quote">
+        <div class="quote-type"><span class="sentiment mixed">Neutral</span> · B2</div>
+        <q>Strong response to the floorplan; pricing was the main point of discussion.</q>
+        <div class="quote-date">Aug 4</div>
       </div>
     </div>
   </section>
@@ -1293,36 +1360,6 @@ footer {
     </div>
   </section>
 
-  <!-- Decisions -->
-  <section id="decisions" class="section shell">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">Developer Review</div>
-        <h2>Decisions</h2>
-      </div>
-      <p>Read-only in V1 · approvals planned for V1.5</p>
-    </div>
-    <div class="decision-grid">
-      <article class="decision">
-        <div class="type">Pricing Adjustment</div>
-        <h3>Unit C3</h3>
-        <div class="compare">
-          <div><small>Current</small><b>$850,000</b></div>
-          <div><small>Suggested</small><b>$825,000</b></div>
-        </div>
-        <p>Repeated pricing feedback paired with a competitive price move nearby. Recommended for discussion at the next pricing review.</p>
-      </article>
-      <article class="decision">
-        <div class="type">Next Listing Release</div>
-        <h3>Unit D2</h3>
-        <div class="compare">
-          <div><small>Status</small><b>Ready</b></div>
-          <div><small>Suggested</small><b>List Aug 14</b></div>
-        </div>
-        <p>Construction readiness and current traffic support bringing the next unit to market during the upcoming reporting period.</p>
-      </article>
-    </div>
-  </section>
 
   <!-- Marketing -->
   <section id="marketing" class="section shell">
@@ -1331,7 +1368,7 @@ footer {
         <div class="eyebrow">Visibility</div>
         <h2>Marketing</h2>
       </div>
-      <p>Campaign activity at a glance</p>
+      <p>Placeholder metrics · connect Marketing Roadmap tab for live data</p>
     </div>
     <div class="property-list">
       <div class="property-row">
@@ -1339,78 +1376,648 @@ footer {
         <div><small>Impressions</small><strong>12,504</strong></div>
         <div><small>Property Views</small><strong>241</strong></div>
         <div><small>Status</small><strong>Active</strong></div>
-        <a class="text-link" href="#">Details</a>
       </div>
       <div class="property-row">
         <div class="property-name"><strong>Broker Outreach</strong><span>Email · Complete</span></div>
         <div><small>Recipients</small><strong>486</strong></div>
         <div><small>Engagement</small><strong>—</strong></div>
         <div><small>Status</small><strong>Complete</strong></div>
-        <a class="text-link" href="#">Details</a>
       </div>
     </div>
   </section>
 
-  <!-- Period Highlights -->
-  <section id="period" class="period-highlight">
-    <div class="shell">
-      <div class="section-head">
-        <div>
-          <div class="eyebrow">Period Highlights</div>
-          <h2>What matters this week</h2>
-        </div>
-      </div>
-      <div class="highlight-grid">
-        <div class="highlight-lead">Buyer activity strengthened while sentiment remained favorable. Pricing and parking continue to be the clearest friction points, and two developer decisions are positioned for review.</div>
-        <div class="highlight-stat"><b>24</b><span>Buyer visits</span></div>
-        <div class="highlight-stat"><b>8</b><span>New leads</span></div>
-        <div class="highlight-stat"><b>5</b><span>Listed homes</span></div>
-        <div class="highlight-stat"><b>2</b><span>Decisions awaiting review</span></div>
-      </div>
-    </div>
-  </section>
 </main>
 
 <footer>
   <div class="shell">
-    First and Main · Lowell Heights Developer Portal · V1
+    <div class="ft-brand">
+      <strong>First and Main</strong>
+    </div>
+    <div class="ft-col">
+      <h4>Team</h4>
+      <span>Brook Biggerstaff · <a href="tel:5099913284">(509) 991-3284</a></span>
+      <span>Jillian Speed · <a href="tel:2067693350">(206) 769-3350</a></span>
+      <a href="https://firstandmainrealestate.com" target="_blank" rel="noopener">firstandmainrealestate.com ↗</a>
+    </div>
+    <div class="ft-bottom">
+      <span>Lowell Heights Developer Portal</span>
+      <span>© First and Main Real Estate</span>
+    </div>
   </div>
 </footer>
 
 <script>
-const unitData = {
-  A3: { status: "Listed", address: "5810 Lowell Larimer Rd · Unit A3", price: "$1,120,000", beds: "4 BD", baths: "4 BA", sqft: "2,575 SF", mls: "2412345", dom: "6", construction: "Complete" },
-  A4: { status: "Available", address: "Lowell Heights · Unit A4", price: "$1,075,000", beds: "4 BD", baths: "3 BA", sqft: "2,410 SF", mls: "—", dom: "—", construction: "Final finishes" },
-  B2: { status: "Listed", address: "Lowell Heights · Unit B2", price: "$850,000", beds: "3 BD", baths: "3 BA", sqft: "1,819 SF", mls: "2412371", dom: "11", construction: "Complete" },
-  C5: { status: "Pending", address: "Lowell Heights · Unit C5", price: "$925,000", beds: "4 BD", baths: "3 BA", sqft: "2,112 SF", mls: "2412219", dom: "—", construction: "Complete" }
-};
+// ── Live data (Sheet + Luxury Presence) ──
+// Browser cannot hit Google/S3 directly (CORS). Order:
+// 1) /api/sheet + /api/lp on Vercel  2) jina.ai text proxy  3) embedded fallback
+const SHEET_PUB = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc8vL1cAkmtftqD_qWZiUIrBOzool2EmG-3LwDiQD_8-JtQZJ4kZOactTmSWCDUAxQMnNwlHf_991k/pub";
+const TAB_GIDS = { inventory: "1397988016", traffic: "696309813", leads: "827444638", feedback: "776649459", actions: "964868991" };
+const LP_URL = "https://lp-data-syndication-production.s3.amazonaws.com/v1/7dcaf7ae-44ff-46d5-92e5-15e990b91eca/properties.json";
+
+const INVENTORY_FALLBACK = [{"id":"A1","status":"Model Home","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"2576","mls":"2509115","dom":"0:00:00","mapX":"21.55","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"496080:00:00","mapX":"25.98","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"30.4","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"34.83","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"39.19","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"B1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"50.26","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"54.75","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"59.05","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"62.83","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"67.06","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B6","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"71.29","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"C1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"37.43","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"40.43","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"43.49","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"46.48","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C5","status":"Model Home","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"49.48","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C6","status":"Reserved","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2461566","dom":"","mapX":"52.47","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"D1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"57.68","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"60.81","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"63.93","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"67.06","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"70.18","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"E1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"75.13","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"77.73","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"80.27","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"82.81","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"85.35","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"F1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"41.15","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"44.27","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"47.4","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"50.52","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F5","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"53.65","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"G1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"58.92","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"62.04","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"65.17","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"68.29","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G5","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"71.42","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"H1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"76.37","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"H2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"79.43","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"H3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"82.49","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"H4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"85.48","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"I1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"46.35","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"49.41","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"52.47","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"55.53","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I5","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"58.66","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"J1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"64.13","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"},{"id":"J2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"67.19","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"},{"id":"J3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"70.25","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"},{"id":"J4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"73.31","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"}];
+const LP_FALLBACK = [{"unit":"A3","status":"Listed","price":1120000,"beds":4,"baths":4,"sqft":"2575","mls":"2509115","lat":47.894937,"lng":-122.153458,"address":"5814 Lowell Larimer Rd Unit: A3, Everett, WA 98208","listDate":"2026-04-16","url":"https://firstandmainrealestate.com/properties/5810-lowell-larimer-rd-unit-a3-everett-wa-us-98208-nwm2509115","slug":"5810-lowell-larimer-rd-unit-a3-everett-wa-us-98208-nwm2509115"},{"unit":"C3","status":"Listed","price":850000,"beds":3,"baths":3,"sqft":"1819","mls":"2509133","lat":47.894937,"lng":-122.153458,"address":"5814 Lowell Larimer Rd Unit: C3, Everett, WA 98208","listDate":"2026-04-16","url":"https://firstandmainrealestate.com/properties/5810-lowell-larimer-rd-unit-c3-everett-wa-us-98208-nwm2509133","slug":"5810-lowell-larimer-rd-unit-c3-everett-wa-us-98208-nwm2509133"},{"unit":"C4","status":"Listed","price":850000,"beds":3,"baths":3,"sqft":"1819","mls":"2483811","lat":47.893488,"lng":-122.153896,"address":"5814 Lowell Larimer Road Unit: C4, Everett, WA 98208","listDate":"2026-02-26","url":"https://firstandmainrealestate.com/properties/5822-lowell-larimer-street-unit-b-everett-wa-us-98208-nwm2483811","slug":"5822-lowell-larimer-street-unit-b-everett-wa-us-98208-nwm2483811"},{"unit":"C6","status":"Pending","price":850000,"beds":3,"baths":3,"sqft":"1819","mls":"2461566","lat":47.893488,"lng":-122.153896,"address":"5814 Lowell Larimer Road Unit: C6, Everett, WA 98208","listDate":"2025-12-18","url":"https://firstandmainrealestate.com/properties/5822-lowell-larimer-road-unit-b-everett-wa-us-98208-nwm2461566","slug":"5822-lowell-larimer-road-unit-b-everett-wa-us-98208-nwm2461566"},{"unit":"A4","status":"Listed","price":1120000,"beds":4,"baths":4,"sqft":"2679","mls":"2461567","lat":47.893488,"lng":-122.153896,"address":"5814 Lowell Larimer Road Unit: A4, Everett, WA 98208","listDate":"2025-12-18","url":"https://firstandmainrealestate.com/properties/5822-lowell-larimer-road-everett-wa-us-98208-nwm2461567","slug":"5822-lowell-larimer-road-everett-wa-us-98208-nwm2461567"}];
+
+function sheetDirectUrl(tab) {
+  return SHEET_PUB + "?gid=" + TAB_GIDS[tab] + "&single=true&output=csv";
+}
+
+function extractCsvFromProxyText(text) {
+  if (!text) return null;
+  const t = text.trim();
+  if (t.startsWith("<!DOCTYPE") || t.startsWith("<html")) return null;
+  // jina.ai wraps content after "Markdown Content:"
+  const marker = "Markdown Content:";
+  let body = t;
+  const idx = t.indexOf(marker);
+  if (idx >= 0) body = t.slice(idx + marker.length).trim();
+  // first line should look like CSV headers
+  const first = body.split(/\r?\n/)[0] || "";
+  if (first.includes(",") && /[A-Za-z]/.test(first)) return body;
+  if (body.includes("Unit ID") || body.includes("Snapshot Date")) return body;
+  return null;
+}
+
+async function fetchSheet(tab) {
+  // 1) Vercel proxy
+  try {
+    const r = await fetch("/api/sheet?tab=" + encodeURIComponent(tab));
+    if (r.ok) {
+      const text = await r.text();
+      const csv = extractCsvFromProxyText(text);
+      if (csv) return csv;
+    }
+  } catch (_) {}
+
+  // 2) jina.ai text proxy (bypasses CORS)
+  try {
+    const r = await fetch("https://r.jina.ai/" + sheetDirectUrl(tab));
+    if (r.ok) {
+      const text = await r.text();
+      const csv = extractCsvFromProxyText(text);
+      if (csv) return csv;
+    }
+  } catch (_) {}
+
+  // 3) other relays
+  const direct = sheetDirectUrl(tab);
+  for (const url of [
+    "https://api.allorigins.win/raw?url=" + encodeURIComponent(direct),
+    "https://corsproxy.io/?" + encodeURIComponent(direct)
+  ]) {
+    try {
+      const r = await fetch(url);
+      if (r.ok) {
+        const csv = extractCsvFromProxyText(await r.text());
+        if (csv) return csv;
+      }
+    } catch (_) {}
+  }
+  return null; // caller uses fallback
+}
+
+async function fetchLP() {
+  try {
+    const r = await fetch("/api/lp");
+    if (r.ok) {
+      const data = await r.json();
+      if (data && data.data && data.data.properties) return normalizeLP(data.data.properties);
+    }
+  } catch (_) {}
+  try {
+    const r = await fetch("https://r.jina.ai/" + LP_URL);
+    if (r.ok) {
+      const text = await r.text();
+      // jina may return JSON as text
+      const start = text.indexOf("{");
+      const end = text.lastIndexOf("}");
+      if (start >= 0 && end > start) {
+        const data = JSON.parse(text.slice(start, end + 1));
+        if (data && data.data && data.data.properties) return normalizeLP(data.data.properties);
+      }
+    }
+  } catch (_) {}
+  return LP_FALLBACK;
+}
+
+function normalizeLP(properties) {
+  const statusMap = { FOR_SALE: "Listed", PENDING: "Pending", SOLD: "Sold", COMING_SOON: "Available" };
+  return properties.map(p => {
+    const name = p.name || "";
+    const addr = p.fullAddress || "";
+    let m = name.match(/Unit:?\s*([A-Za-z]?\d+[A-Za-z]?)/i) || addr.match(/Unit:?\s*([A-Za-z]?\d+[A-Za-z]?)/i);
+    const unit = m ? m[1].toUpperCase() : "";
+    return {
+      unit,
+      status: statusMap[p.status] || p.status || "Listed",
+      price: p.salesPrice,
+      beds: p.bedroomCount,
+      baths: p.bathCount,
+      sqft: String(p.livingSpaceSize || "").replace(/\.0$/, ""),
+      mls: String(p.mlsId || ""),
+      lat: p.latitude,
+      lng: p.longitude,
+      address: p.fullAddress || "",
+      listDate: p.listDate || "",
+      url: p.listingUrl || (p.slug ? "https://firstandmainrealestate.com/properties/" + p.slug : ""),
+      slug: p.slug || ""
+    };
+  }).filter(x => x.unit);
+}
+
+const MAP_CENTER = { lat: 47.8935, lng: -122.1539 };
+function pctToLatLng(mapX, mapY) {
+  const x = parseFloat(mapX) || 50;
+  const y = parseFloat(mapY) || 50;
+  return {
+    lat: MAP_CENTER.lat + (50 - y) * 0.000045,
+    lng: MAP_CENTER.lng + (x - 50) * 0.00006
+  };
+}
+
+function parseCSV(text) {
+  if (!text) return [];
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = parseCSVLine(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = parseCSVLine(line);
+    const obj = {};
+    headers.forEach((h, i) => { obj[h.trim()] = (vals[i] || "").trim(); });
+    return obj;
+  }).filter(r => Object.values(r).some(v => v));
+}
+function parseCSVLine(line) {
+  const result = [];
+  let cur = "", inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; continue; }
+    if (c === "," && !inQ) { result.push(cur); cur = ""; continue; }
+    cur += c;
+  }
+  result.push(cur);
+  return result;
+}
+
+function formatMoney(n) {
+  if (n == null || n === "") return "—";
+  if (typeof n === "string" && n.includes("$")) return n.replace(/\.00$/, "");
+  const num = Number(n);
+  if (isNaN(num)) return String(n);
+  return "$" + num.toLocaleString("en-US");
+}
+
+let unitData = {};
+
+
+async function loadLiveData() {
+  let sourceLabel = "Fallback";
+  try {
+    const [invText, trafficText, leadsText, feedbackText, actionsText, lpList] = await Promise.all([
+      fetchSheet("inventory"),
+      fetchSheet("traffic"),
+      fetchSheet("leads"),
+      fetchSheet("feedback"),
+      fetchSheet("actions"),
+      fetchLP()
+    ]);
+
+    let inventory;
+    if (invText) {
+      inventory = parseCSV(invText);
+      sourceLabel = "Live sheet";
+    } else {
+      inventory = INVENTORY_FALLBACK.map(r => ({
+        "Unit ID": r.id,
+        "Status": r.status,
+        "Address": r.address,
+        "Current List Price": r.price,
+        "Beds": r.beds,
+        "Baths": r.baths,
+        "Square Feet": r.sqft,
+        "Primary MLS Number": r.mls,
+        "Days on Market": r.dom,
+        "Map X": r.mapX,
+        "Map Y": r.mapY,
+        "Floor Plan": r.floorPlan,
+        "Building": r.building,
+        "Completion Status": r.completion
+      }));
+      sourceLabel = "Cached sheet";
+    }
+
+    const traffic = parseCSV(trafficText || "").filter(r => r["Traffic ID"] || r["Activity Date"]);
+    const leads = parseCSV(leadsText || "").filter(r => r["Lead ID"] || r["Lead Date"]);
+    const feedback = parseCSV(feedbackText || "").filter(r => r["Feedback ID"] || r["Feedback Date"]);
+    const actions = parseCSV(actionsText || "").filter(r => r["Action ID"] || r["Date Created"]);
+
+    // Index LP by unit
+    const lpByUnit = {};
+    (lpList || LP_FALLBACK).forEach(p => { if (p.unit) lpByUnit[p.unit] = p; });
+    if (lpList && lpList.length) sourceLabel += " + MLS";
+
+    // Build unitData — sheet base, LP overrides for live MLS fields
+    unitData = {};
+    inventory.forEach(row => {
+      const id = row["Unit ID"] || row["Map Label"] || row.id;
+      if (!id) return;
+      const lp = lpByUnit[id];
+      const coords = pctToLatLng(row["Map X"] || row["Test Map X"] || row.mapX, row["Map Y"] || row["Test Map Y"] || row.mapY);
+      let status = row["Status"] || row.status || "Available";
+      let price = row["Current List Price"] || row["Original List Price"] || row.price || "—";
+      let beds = row["Beds"] || row.beds || "";
+      let baths = row["Baths"] || row.baths || "";
+      let sqft = row["Square Feet"] || row.sqft || "";
+      let mls = row["Primary MLS Number"] || row["MLS Number"] || row.mls || "—";
+      let lat = coords.lat, lng = coords.lng;
+      let address = row["Address"] || row.address || ("Lowell Heights · Unit " + id);
+      let listingUrl = "";
+
+      if (lp) {
+        status = lp.status || status;
+        price = formatMoney(lp.price);
+        if (lp.beds) beds = lp.beds;
+        if (lp.baths) baths = lp.baths;
+        if (lp.sqft) sqft = lp.sqft;
+        if (lp.mls) mls = lp.mls;
+        if (lp.lat) lat = lp.lat;
+        if (lp.lng) lng = lp.lng;
+        if (lp.address) address = lp.address;
+        listingUrl = lp.url || "";
+      } else {
+        price = formatMoney(price);
+      }
+
+      unitData[id] = {
+        status,
+        address,
+        price,
+        beds: beds ? (String(beds).includes("BD") ? beds : beds + " BD") : "—",
+        baths: baths ? (String(baths).includes("BA") ? baths : baths + " BA") : "—",
+        sqft: sqft ? (String(sqft).includes("SF") ? sqft : sqft + " SF") : (row["Floor Plan"] || row.floorPlan || "—"),
+        mls,
+        dom: row["Days on Market"] || row.dom || "—",
+        construction: row["Completion Status"] || row["Estimated Completion Date"] || row.completion || "—",
+        lat, lng,
+        mapX: row["Map X"] || row.mapX,
+        mapY: row["Map Y"] || row.mapY,
+        floorPlan: row["Floor Plan"] || row.floorPlan,
+        building: row["Building"] || row["Building Number"] || row.building,
+        listingUrl
+      };
+    });
+
+    // Ensure LP-only units still appear
+    Object.keys(lpByUnit).forEach(id => {
+      if (unitData[id]) return;
+      const lp = lpByUnit[id];
+      unitData[id] = {
+        status: lp.status,
+        address: lp.address,
+        price: formatMoney(lp.price),
+        beds: lp.beds ? lp.beds + " BD" : "—",
+        baths: lp.baths ? lp.baths + " BA" : "—",
+        sqft: lp.sqft ? lp.sqft + " SF" : "—",
+        mls: lp.mls || "—",
+        dom: "—",
+        construction: "—",
+        lat: lp.lat || MAP_CENTER.lat,
+        lng: lp.lng || MAP_CENTER.lng,
+        listingUrl: lp.url || ""
+      };
+    });
+
+    updateKPIs(inventory, traffic, leads, feedback, actions, lpByUnit);
+    updateInventoryList(inventory, lpByUnit);
+    updateActionsList(actions);
+    updateFeedbackList(feedback);
+    updateTraffic(traffic);
+    rebuildMapMarkers();
+
+    const synced = document.querySelector(".synced");
+    if (synced) {
+      synced.textContent = sourceLabel + " · " + new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    }
+  } catch (err) {
+    console.error("Live data load failed:", err);
+    // Last resort: pure fallback
+    try {
+      applyPureFallback();
+    } catch (e2) {
+      console.error(e2);
+    }
+    const synced = document.querySelector(".synced");
+    if (synced) synced.textContent = "Offline · cached data";
+  }
+}
+
+function applyPureFallback() {
+  const inventory = INVENTORY_FALLBACK.map(r => ({
+    "Unit ID": r.id, "Status": r.status, "Address": r.address,
+    "Current List Price": r.price, "Beds": r.beds, "Baths": r.baths,
+    "Square Feet": r.sqft, "Primary MLS Number": r.mls, "Days on Market": r.dom,
+    "Map X": r.mapX, "Map Y": r.mapY, "Floor Plan": r.floorPlan,
+    "Building": r.building, "Completion Status": r.completion
+  }));
+  const lpByUnit = {};
+  LP_FALLBACK.forEach(p => { lpByUnit[p.unit] = p; });
+  unitData = {};
+  inventory.forEach(row => {
+    const id = row["Unit ID"];
+    const lp = lpByUnit[id];
+    const coords = pctToLatLng(row["Map X"], row["Map Y"]);
+    unitData[id] = {
+      status: (lp && lp.status) || row["Status"] || "Available",
+      address: (lp && lp.address) || row["Address"],
+      price: lp ? formatMoney(lp.price) : formatMoney(row["Current List Price"]),
+      beds: lp && lp.beds ? lp.beds + " BD" : "—",
+      baths: lp && lp.baths ? lp.baths + " BA" : "—",
+      sqft: lp && lp.sqft ? lp.sqft + " SF" : (row["Square Feet"] ? row["Square Feet"] + " SF" : row["Floor Plan"] || "—"),
+      mls: (lp && lp.mls) || row["Primary MLS Number"] || "—",
+      dom: row["Days on Market"] || "—",
+      construction: row["Completion Status"] || "—",
+      lat: (lp && lp.lat) || coords.lat,
+      lng: (lp && lp.lng) || coords.lng,
+      listingUrl: (lp && lp.url) || ""
+    };
+  });
+  updateKPIs(inventory, [], [], [], [], lpByUnit);
+  updateInventoryList(inventory, lpByUnit);
+  rebuildMapMarkers();
+}
+
+function updateKPIs(inventory, traffic, leads, feedback, actions, lpByUnit) {
+  // Prefer merged unitData statuses (includes MLS overrides)
+  const statusCounts = {};
+  Object.values(unitData).forEach(u => {
+    const s = u.status || "Unspecified";
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
+  });
+  const available = (statusCounts["Available"] || 0) + (statusCounts["Model Home"] || 0);
+  const pending = (statusCounts["Pending"] || 0) + (statusCounts["Reserved"] || 0);
+  const listed = statusCounts["Listed"] || 0;
+  const sold = statusCounts["Sold"] || 0;
+  const openActions = (actions || []).filter(a => {
+    const st = (a["Status"] || "").toLowerCase();
+    return st && st !== "complete" && st !== "completed" && st !== "done";
+  }).length;
+  const mlsLive = lpByUnit ? Object.keys(lpByUnit).length : 0;
+
+  const metrics = document.querySelectorAll(".metric");
+  if (metrics[0]) {
+    metrics[0].querySelector(".metric-value").textContent = listed || available;
+    metrics[0].querySelector(".metric-sub").textContent =
+      `${available} Available · ${pending} Pending · ${sold} Sold` + (mlsLive ? ` · ${mlsLive} on MLS` : "");
+  }
+  if (metrics[1]) {
+    metrics[1].querySelector(".metric-value").textContent = (traffic || []).length;
+    metrics[1].querySelector(".metric-sub").textContent = "Visitor groups";
+  }
+  if (metrics[2]) {
+    metrics[2].querySelector(".metric-value").textContent = (leads || []).length;
+    metrics[2].querySelector(".metric-sub").textContent = "New leads";
+  }
+  if (metrics[3]) {
+    metrics[3].querySelector(".metric-value").textContent = (feedback || []).length;
+    const pos = (feedback || []).filter(f => (f["Sentiment"] || "").toLowerCase() === "positive").length;
+    metrics[3].querySelector(".metric-sub").textContent =
+      feedback && feedback.length ? Math.round(pos / feedback.length * 100) + "% positive" : "Buyer notes";
+  }
+  if (metrics[4]) {
+    metrics[4].querySelector(".metric-value").textContent = openActions;
+    metrics[4].querySelector(".metric-sub").textContent = openActions ? "Open items" : "None open";
+  }
+}
+
+function updateInventoryList(inventory, lpByUnit) {
+  const list = document.querySelector(".inv-list");
+  if (!list) return;
+  const filters = document.querySelector(".inv-filters");
+
+  const statusCounts = {};
+  Object.values(unitData).forEach(u => {
+    const s = u.status || "Unspecified";
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
+  });
+  const total = Object.keys(unitData).length;
+  const available = (statusCounts["Available"] || 0) + (statusCounts["Model Home"] || 0);
+  const listed = statusCounts["Listed"] || 0;
+  const pending = (statusCounts["Pending"] || 0) + (statusCounts["Reserved"] || 0);
+  const sold = statusCounts["Sold"] || 0;
+
+  if (filters) {
+    filters.innerHTML = `
+      <button type="button" data-filter="all" class="active">All · ${total}</button>
+      <button type="button" data-filter="available">Available · ${available}</button>
+      <button type="button" data-filter="listed">Listed · ${listed}</button>
+      <button type="button" data-filter="pending">Pending · ${pending}</button>
+      <button type="button" data-filter="sold">Sold · ${sold}</button>
+    `;
+    filters.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        filters.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderInventoryRows(btn.dataset.filter);
+      });
+    });
+  }
+  renderInventoryRows("all");
+}
+
+function renderInventoryRows(filter) {
+  const list = document.querySelector(".inv-list");
+  if (!list) return;
+  const ids = Object.keys(unitData).sort((a, b) => {
+    const order = { Listed: 0, Pending: 1, "Model Home": 2, Available: 3, Reserved: 4, Sold: 5 };
+    return (order[unitData[a].status] ?? 9) - (order[unitData[b].status] ?? 9) || a.localeCompare(b);
+  });
+  const filtered = ids.filter(id => {
+    const st = (unitData[id].status || "").toLowerCase();
+    if (filter === "all") return true;
+    if (filter === "available") return st === "available" || st === "model home";
+    if (filter === "listed") return st === "listed";
+    if (filter === "pending") return st === "pending" || st === "reserved";
+    if (filter === "sold") return st === "sold";
+    return true;
+  });
+  const show = filtered.slice(0, 40);
+  if (!show.length) {
+    list.innerHTML = '<div class="inv-row" style="justify-content:center;color:var(--muted);padding:28px">No homes in this status</div>';
+    return;
+  }
+  list.innerHTML = show.map(id => {
+    const u = unitData[id];
+    const specs = [u.beds !== "—" && u.beds, u.baths !== "—" && u.baths].filter(Boolean).join(" · ");
+    const mls = u.mls && u.mls !== "—" ? " · MLS " + u.mls : "";
+    return `
+      <div class="inv-row" data-status="${(u.status || "").toLowerCase()}">
+        <div class="inv-thumb"></div>
+        <div>
+          <div class="inv-address">${id} · ${(u.address || "Lowell Heights").split(",")[0]}<small>${u.status || "—"}${mls}</small></div>
+        </div>
+        <div class="inv-price">${u.price || "—"}</div>
+        <div class="inv-specs">${specs || u.floorPlan || "—"}<strong>${u.sqft && u.sqft !== "—" ? u.sqft : ""}</strong></div>
+        <div class="inv-dom">DOM<strong>${u.dom && u.dom !== "—" ? u.dom : "—"}</strong></div>
+        <div class="inv-action"><a href="#" onclick="openDrawer('${id}');return false;">${u.listingUrl ? "View Listing ↗" : "View Details ↗"}</a></div>
+      </div>`;
+  }).join("");
+}
+
+function updateActionsList(actions) {
+  const list = document.querySelector(".action-list");
+  if (!list || !actions.length) return;
+  list.innerHTML = actions.map(a => {
+    const pri = (a["Priority"] || "Medium").toLowerCase();
+    return `
+      <div class="action-row">
+        <strong>${a["Description"] || a["Action ID"] || "Action"}</strong>
+        <span>${a["Owner"] || a["Green City Owner"] || "—"}</span>
+        <span>${a["Due Date"] ? "Due " + a["Due Date"] : "—"}</span>
+        <span class="priority ${pri === "high" ? "high" : "medium"}">${a["Priority"] || "Medium"}</span>
+      </div>`;
+  }).join("");
+}
+
+function updateFeedbackList(feedback) {
+  const card = document.getElementById("feedbackList") || document.querySelector("#feedback .card");
+  if (!card || !feedback || !feedback.length) return;
+  card.innerHTML = feedback.map(f => {
+    const sent = (f["Sentiment"] || "neutral").toLowerCase();
+    const cls = sent === "positive" ? "positive" : sent === "negative" || sent === "concern" ? "concern" : "mixed";
+    return `
+      <div class="quote">
+        <div class="quote-type"><span class="sentiment ${cls}">${f["Sentiment"] || "Note"}</span> · ${f["Unit ID"] || ""}</div>
+        <q>${f["Feedback Detail"] || "—"}</q>
+        <div class="quote-date">${f["Feedback Date"] || ""}</div>
+      </div>`;
+  }).join("");
+}
+
+
+
+let lastTraffic = [];
+function updateTraffic(traffic) {
+  lastTraffic = traffic || [];
+  const totalEl = document.querySelector(".traffic-total");
+  if (totalEl) {
+    totalEl.innerHTML = lastTraffic.length + ' <small>Total Groups</small>';
+  }
+  const counts = {};
+  lastTraffic.forEach(r => {
+    const ty = r["Traffic Type"] || "Other";
+    counts[ty] = (counts[ty] || 0) + 1;
+  });
+  const map = {
+    "Open House": "tt-open",
+    "Appointment": "tt-appt",
+    "Broker": "tt-broker",
+    "Walk-In": "tt-walk"
+  };
+  Object.keys(map).forEach(k => {
+    const el = document.getElementById(map[k]);
+    if (el) el.textContent = counts[k] || 0;
+  });
+  document.querySelectorAll(".traffic-type").forEach(row => {
+    row.onclick = () => {
+      const type = row.dataset.type;
+      const detail = document.getElementById("trafficDetail");
+      if (!detail) return;
+      const rows = lastTraffic.filter(r => (r["Traffic Type"] || "") === type);
+      if (!rows.length) {
+        detail.style.display = "block";
+        detail.innerHTML = '<div style="color:var(--muted);font-size:13px">No ' + type + ' records in the current sheet data.</div>';
+        return;
+      }
+      detail.style.display = "block";
+      detail.innerHTML = '<div class="eyebrow" style="margin-bottom:12px">' + type + ' · ' + rows.length + '</div>' +
+        rows.map(r => '<div class="row"><span>' + (r["Activity Date"] || "") + ' · ' + (r["Unit ID"] || "") + '</span><b>' + (r["Visitor Count"] || "—") + ' visitors</b></div>').join("");
+    };
+  });
+}
+
+const SITE_PLAN_IMAGE_URL = "community-map.jpg";
+
+function rebuildMapMarkers() {
+  const layer = document.getElementById("sitePlanPins");
+  if (!layer) return;
+  layer.innerHTML = "";
+
+  const img = document.getElementById("sitePlanImg");
+  if (img) {
+    if (SITE_PLAN_IMAGE_URL) img.src = SITE_PLAN_IMAGE_URL;
+    img.style.display = "block";
+  }
+
+  Object.keys(unitData).forEach(id => {
+    const d = unitData[id];
+    const x = parseFloat(d.mapX);
+    const y = parseFloat(d.mapY);
+    if (isNaN(x) || isNaN(y)) return;
+
+    const statusClass = (d.status || "available").toLowerCase().replace(/\s+/g, "-");
+    const safeClass = ["available","listed","pending","sold","model-home","reserved"].includes(statusClass)
+      ? statusClass
+      : "available";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "lot-marker " + safeClass;
+    btn.textContent = id;
+    btn.style.left = x + "%";
+    btn.style.top = y + "%";
+    btn.title = id + " · " + (d.status || "");
+    btn.addEventListener("click", () => openDrawer(id));
+    layer.appendChild(btn);
+  });
+}
 
 const drawer = document.getElementById("drawer");
 const empty = document.getElementById("emptyMap");
 
-document.querySelectorAll(".pin").forEach(pin => {
-  pin.addEventListener("click", () => {
-    const d = unitData[pin.dataset.unit];
-    document.getElementById("drawerStatus").textContent = d.status;
-    document.getElementById("drawerUnit").textContent = pin.dataset.unit;
-    document.getElementById("drawerAddress").textContent = d.address;
-    document.getElementById("drawerPrice").textContent = d.price;
-    document.getElementById("drawerBeds").textContent = d.beds;
-    document.getElementById("drawerBaths").textContent = d.baths;
-    document.getElementById("drawerSqft").textContent = d.sqft;
-    document.getElementById("drawerMls").textContent = d.mls;
-    document.getElementById("drawerDom").textContent = d.dom;
-    document.getElementById("drawerConstruction").textContent = d.construction;
-    empty.style.display = "none";
-    drawer.classList.add("open");
-  });
-});
+function openDrawer(id) {
+  const d = unitData[id];
+  if (!d) return;
+  const st = (d.status || "").toLowerCase();
+  document.getElementById("drawerStatus").textContent = d.status;
+  document.getElementById("drawerStatus").style.color =
+    st === "listed" || st === "model home" ? "var(--sage)" :
+    st === "available" ? "var(--lime)" :
+    st === "pending" || st === "reserved" ? "var(--sand)" : "var(--clay)";
+  document.getElementById("drawerUnit").textContent = id;
+  document.getElementById("drawerAddress").textContent = d.address;
+  document.getElementById("drawerPrice").textContent = d.price;
+  document.getElementById("drawerBeds").textContent = d.beds;
+  document.getElementById("drawerBaths").textContent = d.baths;
+  document.getElementById("drawerSqft").textContent = d.sqft;
+  document.getElementById("drawerMls").textContent = d.mls;
+  document.getElementById("drawerDom").textContent = d.dom;
+  document.getElementById("drawerConstruction").textContent = d.construction;
+  const link = document.querySelector(".drawer-link");
+  if (link) {
+    if (d.listingUrl) {
+      link.href = d.listingUrl;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "View First and Main Listing ↗";
+    } else {
+      link.href = "#";
+      link.removeAttribute("target");
+      link.textContent = "Listing link unavailable";
+    }
+  }
+  empty.style.display = "none";
+  drawer.classList.add("open");
+}
 
 document.getElementById("drawerClose").addEventListener("click", () => {
   drawer.classList.remove("open");
   empty.style.display = "block";
 });
 
+// Load live sheet + MLS data (updates KPIs, inventory, site-plan pins)
+loadLiveData();
+
+// ── Period picker ──
 const toggle = document.getElementById("periodToggle");
 const pop = document.getElementById("periodPop");
 toggle.addEventListener("click", e => {
@@ -1467,7 +2074,7 @@ document.querySelectorAll("[data-range]").forEach(b => b.addEventListener("click
   }
 }));
 
-// Active nav highlighting
+// Active nav
 document.querySelectorAll(".primary-nav a, .jumpnav a").forEach(a => {
   a.addEventListener("click", () => {
     document.querySelectorAll(".primary-nav a").forEach(x => x.classList.remove("active"));
