@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -392,20 +393,19 @@ a { color: inherit; }
   font-size: 12px;
 }
 
-/* Map */
+/* Map — site plan with Map X / Map Y percentage pins */
 .map-stage {
   position: relative;
   height: auto;
-  min-height: 520px;
+  min-height: 420px;
   overflow: hidden;
   border: 1px solid var(--line);
   background: #e8e4db;
 }
-/* Site plan uses Map X / Map Y percentages from the Green City sheet */
 .site-plan {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9; /* matches 1536×864 site plan */
+  aspect-ratio: 16 / 9;
   background: #e5e1d8;
   overflow: hidden;
 }
@@ -414,7 +414,7 @@ a { color: inherit; }
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: fill; /* Map X/Y were calibrated to this exact frame */
+  object-fit: fill;
   object-position: center;
   display: block;
   pointer-events: none;
@@ -444,6 +444,17 @@ a { color: inherit; }
   cursor: pointer;
   z-index: 3;
   transition: transform 0.15s, box-shadow 0.15s;
+  padding: 0;
+  background: var(--lime);
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: auto;
+}
+.site-plan-pins {
+  pointer-events: none;
+}
+.site-plan-pins .lot-marker {
+  pointer-events: auto;
 }
 .lot-marker:hover {
   transform: scale(1.15);
@@ -568,6 +579,7 @@ a { color: inherit; }
   right: 20px;
   top: 20px;
   z-index: 4;
+  pointer-events: none;
   background: rgba(254, 252, 248, 0.96);
   border: 1px solid var(--line);
   padding: 14px 16px;
@@ -609,7 +621,7 @@ a { color: inherit; }
 .inv-list { background: var(--paper); }
 .inv-row {
   display: grid;
-  grid-template-columns: 72px 1.5fr 0.9fr 0.9fr 0.55fr 0.75fr;
+  grid-template-columns: 72px 1.6fr 0.9fr 0.9fr 0.85fr;
   gap: 24px;
   align-items: center;
   padding: 26px 8px;
@@ -621,7 +633,30 @@ a { color: inherit; }
   height: 54px;
   background: linear-gradient(135deg, #e8e4db, #d8d3c8);
   border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
+.inv-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.drawer-photo {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, #e8e4db, #d8d3c8);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.drawer-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.drawer-photo:empty { display: none; }
 .inv-address {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 18px;
@@ -654,19 +689,7 @@ a { color: inherit; }
   color: var(--ink);
   margin-top: 2px;
 }
-.inv-dom {
-  font-size: 12px;
-  color: var(--muted);
-  text-align: center;
-}
-.inv-dom strong {
-  display: block;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--ink);
-  margin-top: 2px;
-}
+
 .inv-action a {
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -700,12 +723,13 @@ a { color: inherit; }
   display: block;
 }
 .bars {
-  height: 180px;
+  height: 200px;
   display: flex;
   align-items: flex-end;
-  gap: 28px;
+  justify-content: space-around;
+  gap: 12px;
   border-bottom: 1px solid var(--line);
-  padding: 16px 8px 0;
+  padding: 16px 8px 28px;
 }
 .bar {
   width: 32px;
@@ -1174,7 +1198,6 @@ footer .ft-bottom {
         <div class="eyebrow">Community</div>
         <h2>Site Plan</h2>
       </div>
-      <p>Pins follow Green City Map X / Map Y · Click a lot for details</p>
     </div>
     <div class="map-stage">
       <div class="site-plan" id="sitePlan">
@@ -1191,6 +1214,7 @@ footer .ft-bottom {
       <div class="map-empty" id="emptyMap">Select a lot to view details</div>
       <div class="property-drawer" id="drawer">
         <button class="drawer-close" id="drawerClose">×</button>
+        <div class="drawer-photo" id="drawerPhoto"></div>
         <div class="drawer-status" id="drawerStatus">Listed</div>
         <div class="drawer-unit" id="drawerUnit">A3</div>
         <div class="drawer-address" id="drawerAddress">5810 Lowell Larimer Rd · Unit A3</div>
@@ -1201,7 +1225,7 @@ footer .ft-bottom {
           <span id="drawerSqft">2,575 SF</span>
         </div>
         <div class="drawer-meta">
-          <b>MLS</b> <span id="drawerMls">2412345</span> · <b>DOM</b> <span id="drawerDom">6</span><br>
+          <b>MLS</b> <span id="drawerMls">2412345</span><br>
           <b>Construction</b> <span id="drawerConstruction">Complete</span>
         </div>
         <a class="drawer-link" href="#">View First and Main Listing ↗</a>
@@ -1218,10 +1242,10 @@ footer .ft-bottom {
       </div>
     </div>
     <div class="inv-filters">
-      <button type="button" data-filter="all" class="active">All</button>
-      <button type="button" data-filter="listed">Listed</button>
+      <button type="button" data-filter="listed" class="active">Listed</button>
       <button type="button" data-filter="pending">Pending</button>
       <button type="button" data-filter="sold">Sold</button>
+      <button type="button" data-filter="all">All</button>
     </div>
     <div class="inv-list">
       <div class="inv-row">
@@ -1231,7 +1255,6 @@ footer .ft-bottom {
         </div>
         <div class="inv-price">$1,120,000</div>
         <div class="inv-specs">4 BD · 4 BA<strong>2,575 SF</strong></div>
-        <div class="inv-dom">DOM<strong>6</strong></div>
         <div class="inv-action"><a href="#">View Listing ↗</a></div>
       </div>
       <div class="inv-row">
@@ -1241,7 +1264,6 @@ footer .ft-bottom {
         </div>
         <div class="inv-price">$850,000</div>
         <div class="inv-specs">3 BD · 3 BA<strong>1,819 SF</strong></div>
-        <div class="inv-dom">DOM<strong>11</strong></div>
         <div class="inv-action"><a href="#">View Listing ↗</a></div>
       </div>
       <div class="inv-row">
@@ -1251,7 +1273,6 @@ footer .ft-bottom {
         </div>
         <div class="inv-price">$925,000</div>
         <div class="inv-specs">4 BD · 3 BA<strong>2,112 SF</strong></div>
-        <div class="inv-dom">DOM<strong>—</strong></div>
         <div class="inv-action"><a href="#">View on Map</a></div>
       </div>
     </div>
@@ -1354,13 +1375,13 @@ footer .ft-bottom {
 
 
   <!-- Marketing -->
-  <section id="marketing" class="section shell">
+  <section id="marketing" class="section shell" style="padding-bottom: 96px;">
     <div class="section-head">
       <div>
         <div class="eyebrow">Visibility</div>
         <h2>Marketing</h2>
       </div>
-      <p>Placeholder metrics · connect Marketing Roadmap tab for live data</p>
+      <p>From Marketing Roadmap</p>
     </div>
     <div class="property-list">
       <div class="property-row">
@@ -1403,11 +1424,11 @@ footer .ft-bottom {
 // Browser cannot hit Google/S3 directly (CORS). Order:
 // 1) /api/sheet + /api/lp on Vercel  2) jina.ai text proxy  3) embedded fallback
 const SHEET_PUB = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc8vL1cAkmtftqD_qWZiUIrBOzool2EmG-3LwDiQD_8-JtQZJ4kZOactTmSWCDUAxQMnNwlHf_991k/pub";
-const TAB_GIDS = { inventory: "1397988016", traffic: "696309813", leads: "827444638", feedback: "776649459", actions: "964868991" };
+const TAB_GIDS = { inventory: "1397988016", traffic: "696309813", leads: "827444638", feedback: "776649459", actions: "964868991", marketing: "17998325" };
 const LP_URL = "https://lp-data-syndication-production.s3.amazonaws.com/v1/7dcaf7ae-44ff-46d5-92e5-15e990b91eca/properties.json";
 
 const INVENTORY_FALLBACK = [{"id":"A1","status":"Model Home","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"2576","mls":"2509115","dom":"0:00:00","mapX":"21.55","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"496080:00:00","mapX":"25.98","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"30.4","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"34.83","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"39.19","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"B1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"50.26","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"54.75","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"59.05","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"62.83","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"67.06","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B6","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"71.29","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"C1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"37.43","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"40.43","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"43.49","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"46.48","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C5","status":"Model Home","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"49.48","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C6","status":"Reserved","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2461566","dom":"","mapX":"52.47","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"D1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"57.68","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"60.81","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"63.93","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"67.06","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"70.18","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"E1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"75.13","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"77.73","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"80.27","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"82.81","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"85.35","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"F1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"41.15","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"44.27","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"47.4","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"50.52","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F5","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"53.65","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"G1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"58.92","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"62.04","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"65.17","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"68.29","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G5","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"71.42","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"H1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"76.37","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"H2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"79.43","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"H3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"82.49","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"H4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"85.48","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"I1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"46.35","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"49.41","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"52.47","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"55.53","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I5","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"58.66","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"J1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"64.13","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"},{"id":"J2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"67.19","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"},{"id":"J3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"70.25","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"},{"id":"J4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"73.31","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"}];
-const LP_FALLBACK = [{"unit":"A3","status":"Listed","price":1120000,"beds":4,"baths":4,"sqft":"2575","mls":"2509115","lat":47.894937,"lng":-122.153458,"address":"5814 Lowell Larimer Rd Unit: A3, Everett, WA 98208","listDate":"2026-04-16","url":"https://firstandmainrealestate.com/properties/5810-lowell-larimer-rd-unit-a3-everett-wa-us-98208-nwm2509115","slug":"5810-lowell-larimer-rd-unit-a3-everett-wa-us-98208-nwm2509115"},{"unit":"C3","status":"Listed","price":850000,"beds":3,"baths":3,"sqft":"1819","mls":"2509133","lat":47.894937,"lng":-122.153458,"address":"5814 Lowell Larimer Rd Unit: C3, Everett, WA 98208","listDate":"2026-04-16","url":"https://firstandmainrealestate.com/properties/5810-lowell-larimer-rd-unit-c3-everett-wa-us-98208-nwm2509133","slug":"5810-lowell-larimer-rd-unit-c3-everett-wa-us-98208-nwm2509133"},{"unit":"C4","status":"Listed","price":850000,"beds":3,"baths":3,"sqft":"1819","mls":"2483811","lat":47.893488,"lng":-122.153896,"address":"5814 Lowell Larimer Road Unit: C4, Everett, WA 98208","listDate":"2026-02-26","url":"https://firstandmainrealestate.com/properties/5822-lowell-larimer-street-unit-b-everett-wa-us-98208-nwm2483811","slug":"5822-lowell-larimer-street-unit-b-everett-wa-us-98208-nwm2483811"},{"unit":"C6","status":"Pending","price":850000,"beds":3,"baths":3,"sqft":"1819","mls":"2461566","lat":47.893488,"lng":-122.153896,"address":"5814 Lowell Larimer Road Unit: C6, Everett, WA 98208","listDate":"2025-12-18","url":"https://firstandmainrealestate.com/properties/5822-lowell-larimer-road-unit-b-everett-wa-us-98208-nwm2461566","slug":"5822-lowell-larimer-road-unit-b-everett-wa-us-98208-nwm2461566"},{"unit":"A4","status":"Listed","price":1120000,"beds":4,"baths":4,"sqft":"2679","mls":"2461567","lat":47.893488,"lng":-122.153896,"address":"5814 Lowell Larimer Road Unit: A4, Everett, WA 98208","listDate":"2025-12-18","url":"https://firstandmainrealestate.com/properties/5822-lowell-larimer-road-everett-wa-us-98208-nwm2461567","slug":"5822-lowell-larimer-road-everett-wa-us-98208-nwm2461567"}];
+const LP_FALLBACK = [{"unit":"A3","status":"Listed","price":1120000,"beds":4,"baths":4,"sqft":"2575","mls":"2509115","lat":47.894937,"lng":-122.153458,"address":"5814 Lowell Larimer Rd Unit: A3, Everett, WA 98208","listDate":"2026-04-16","url":"https://firstandmainrealestate.com/properties/5810-lowell-larimer-rd-unit-a3-everett-wa-us-98208-nwm2509115","slug":"5810-lowell-larimer-rd-unit-a3-everett-wa-us-98208-nwm2509115","photo":"https://dlajgvw9htjpb.cloudfront.net/cms/187e9224-27aa-461a-8bfe-d5639bde4922/2509115/-7557001580476373160.jpg"},{"unit":"C3","status":"Listed","price":850000,"beds":3,"baths":3,"sqft":"1819","mls":"2509133","lat":47.894937,"lng":-122.153458,"address":"5814 Lowell Larimer Rd Unit: C3, Everett, WA 98208","listDate":"2026-04-16","url":"https://firstandmainrealestate.com/properties/5810-lowell-larimer-rd-unit-c3-everett-wa-us-98208-nwm2509133","slug":"5810-lowell-larimer-rd-unit-c3-everett-wa-us-98208-nwm2509133","photo":"https://dlajgvw9htjpb.cloudfront.net/cms/187e9224-27aa-461a-8bfe-d5639bde4922/2509133/-1570755677386992713.jpg"},{"unit":"C4","status":"Listed","price":850000,"beds":3,"baths":3,"sqft":"1819","mls":"2483811","lat":47.893488,"lng":-122.153896,"address":"5814 Lowell Larimer Road Unit: C4, Everett, WA 98208","listDate":"2026-02-26","url":"https://firstandmainrealestate.com/properties/5822-lowell-larimer-street-unit-b-everett-wa-us-98208-nwm2483811","slug":"5822-lowell-larimer-street-unit-b-everett-wa-us-98208-nwm2483811","photo":"https://dlajgvw9htjpb.cloudfront.net/cms/187e9224-27aa-461a-8bfe-d5639bde4922/2483811/-612802554076215612.jpg"},{"unit":"C6","status":"Pending","price":850000,"beds":3,"baths":3,"sqft":"1819","mls":"2461566","lat":47.893488,"lng":-122.153896,"address":"5814 Lowell Larimer Road Unit: C6, Everett, WA 98208","listDate":"2025-12-18","url":"https://firstandmainrealestate.com/properties/5822-lowell-larimer-road-unit-b-everett-wa-us-98208-nwm2461566","slug":"5822-lowell-larimer-road-unit-b-everett-wa-us-98208-nwm2461566","photo":"https://dlajgvw9htjpb.cloudfront.net/cms/187e9224-27aa-461a-8bfe-d5639bde4922/2461566/8264977840041726344.jpg"},{"unit":"A4","status":"Listed","price":1120000,"beds":4,"baths":4,"sqft":"2679","mls":"2461567","lat":47.893488,"lng":-122.153896,"address":"5814 Lowell Larimer Road Unit: A4, Everett, WA 98208","listDate":"2025-12-18","url":"https://firstandmainrealestate.com/properties/5822-lowell-larimer-road-everett-wa-us-98208-nwm2461567","slug":"5822-lowell-larimer-road-everett-wa-us-98208-nwm2461567","photo":"https://dlajgvw9htjpb.cloudfront.net/cms/187e9224-27aa-461a-8bfe-d5639bde4922/2461567/1200722316754484627.jpg"}];
 
 function sheetDirectUrl(tab) {
   return SHEET_PUB + "?gid=" + TAB_GIDS[tab] + "&single=true&output=csv";
@@ -1493,11 +1514,32 @@ async function fetchLP() {
 
 function normalizeLP(properties) {
   const statusMap = { FOR_SALE: "Listed", PENDING: "Pending", SOLD: "Sold", COMING_SOON: "Available" };
+  // Known MLS → unit map for Lowell Heights (LP naming is inconsistent)
+  const mlsToUnit = {
+    "2509115": "A3",
+    "2509133": "C3",
+    "2483811": "C4",
+    "2461566": "C6",
+    "2461567": "A4"
+  };
   return properties.map(p => {
     const name = p.name || "";
     const addr = p.fullAddress || "";
-    let m = name.match(/Unit:?\s*([A-Za-z]?\d+[A-Za-z]?)/i) || addr.match(/Unit:?\s*([A-Za-z]?\d+[A-Za-z]?)/i);
-    const unit = m ? m[1].toUpperCase() : "";
+    const slug = p.slug || "";
+    const mls = String(p.mlsId || "");
+    let unit = mlsToUnit[mls] || "";
+    if (!unit) {
+      let m = slug.match(/unit-([a-z]?\d+[a-z]?)/i)
+        || name.match(/Unit:?\s*([A-Za-z]?\d+[A-Za-z]?)/i)
+        || addr.match(/Unit:?\s*([A-Za-z]?\d+[A-Za-z]?)/i);
+      unit = m ? m[1].toUpperCase() : "";
+    }
+    const media = Array.isArray(p.media) ? p.media : [];
+    let photo = "";
+    if (media.length) {
+      const first = media[0];
+      photo = typeof first === "string" ? first : (first && (first.url || first.src || first.href)) || "";
+    }
     return {
       unit,
       status: statusMap[p.status] || p.status || "Listed",
@@ -1505,15 +1547,17 @@ function normalizeLP(properties) {
       beds: p.bedroomCount,
       baths: p.bathCount,
       sqft: String(p.livingSpaceSize || "").replace(/\.0$/, ""),
-      mls: String(p.mlsId || ""),
+      mls,
       lat: p.latitude,
       lng: p.longitude,
       address: p.fullAddress || "",
       listDate: p.listDate || "",
-      url: p.listingUrl || (p.slug ? "https://firstandmainrealestate.com/properties/" + p.slug : ""),
-      slug: p.slug || ""
+      url: p.listingUrl || (slug ? "https://firstandmainrealestate.com/properties/" + slug : ""),
+      slug,
+      photo,
+      photos: media.map(u => typeof u === "string" ? u : (u && (u.url || u.src)) || "").filter(Boolean)
     };
-  }).filter(x => x.unit);
+  }).filter(x => x.unit || x.mls);
 }
 
 const MAP_CENTER = { lat: 47.8935, lng: -122.1539 };
@@ -1565,12 +1609,13 @@ let unitData = {};
 async function loadLiveData() {
   let sourceLabel = "Fallback";
   try {
-    const [invText, trafficText, leadsText, feedbackText, actionsText, lpList] = await Promise.all([
+    const [invText, trafficText, leadsText, feedbackText, actionsText, marketingText, lpList] = await Promise.all([
       fetchSheet("inventory"),
       fetchSheet("traffic"),
       fetchSheet("leads"),
       fetchSheet("feedback"),
       fetchSheet("actions"),
+      fetchSheet("marketing"),
       fetchLP()
     ]);
 
@@ -1602,10 +1647,15 @@ async function loadLiveData() {
     const leads = parseCSV(leadsText || "").filter(r => r["Lead ID"] || r["Lead Date"]);
     const feedback = parseCSV(feedbackText || "").filter(r => r["Feedback ID"] || r["Feedback Date"]);
     const actions = parseCSV(actionsText || "").filter(r => r["Action ID"] || r["Date Created"]);
+    const marketing = parseCSV(marketingText || "").filter(r => r["Marketing ID"] || r["Campaign or Activity"] || r["Marketing Type"]);
 
     // Index LP by unit
     const lpByUnit = {};
-    (lpList || LP_FALLBACK).forEach(p => { if (p.unit) lpByUnit[p.unit] = p; });
+    const lpByMls = {};
+    (lpList || LP_FALLBACK).forEach(p => {
+      if (p.unit) lpByUnit[p.unit] = p;
+      if (p.mls) lpByMls[String(p.mls)] = p;
+    });
     if (lpList && lpList.length) sourceLabel += " + MLS";
 
     // Build unitData — sheet base, LP overrides for live MLS fields
@@ -1624,6 +1674,7 @@ async function loadLiveData() {
       let lat = coords.lat, lng = coords.lng;
       let address = row["Address"] || row.address || ("Lowell Heights · Unit " + id);
       let listingUrl = "";
+      let photo = "";
 
       if (lp) {
         status = lp.status || status;
@@ -1636,6 +1687,7 @@ async function loadLiveData() {
         if (lp.lng) lng = lp.lng;
         if (lp.address) address = lp.address;
         listingUrl = lp.url || "";
+        photo = lp.photo || "";
       } else {
         price = formatMoney(price);
       }
@@ -1655,7 +1707,8 @@ async function loadLiveData() {
         mapY: row["Map Y"] || row.mapY,
         floorPlan: row["Floor Plan"] || row.floorPlan,
         building: row["Building"] || row["Building Number"] || row.building,
-        listingUrl
+        listingUrl,
+        photo: photo || ""
       };
     });
 
@@ -1675,7 +1728,8 @@ async function loadLiveData() {
         construction: "—",
         lat: lp.lat || MAP_CENTER.lat,
         lng: lp.lng || MAP_CENTER.lng,
-        listingUrl: lp.url || ""
+        listingUrl: lp.url || "",
+        photo: lp.photo || ""
       };
     });
 
@@ -1684,6 +1738,7 @@ async function loadLiveData() {
     updateActionsList(actions);
     updateFeedbackList(feedback);
     updateTraffic(traffic);
+    updateMarketing(marketing);
     rebuildMapMarkers();
 
     const synced = document.querySelector(".synced");
@@ -1712,7 +1767,7 @@ function applyPureFallback() {
     "Building": r.building, "Completion Status": r.completion
   }));
   const lpByUnit = {};
-  LP_FALLBACK.forEach(p => { lpByUnit[p.unit] = p; });
+  LP_FALLBACK.forEach(p => { if (p.unit) lpByUnit[p.unit] = p; });
   unitData = {};
   inventory.forEach(row => {
     const id = row["Unit ID"];
@@ -1730,7 +1785,8 @@ function applyPureFallback() {
       construction: row["Completion Status"] || "—",
       lat: (lp && lp.lat) || coords.lat,
       lng: (lp && lp.lng) || coords.lng,
-      listingUrl: (lp && lp.url) || ""
+      listingUrl: (lp && lp.url) || "",
+      photo: (lp && lp.photo) || ""
     };
   });
   updateKPIs(inventory, [], [], [], [], lpByUnit);
@@ -1799,10 +1855,10 @@ function updateInventoryList(inventory, lpByUnit) {
 
   if (filters) {
     filters.innerHTML = `
-      <button type="button" data-filter="all" class="active">All · ${total}</button>
-      <button type="button" data-filter="listed">Listed · ${listed}</button>
+      <button type="button" data-filter="listed" class="active">Listed · ${listed}</button>
       <button type="button" data-filter="pending">Pending · ${pending}</button>
       <button type="button" data-filter="sold">Sold · ${sold}</button>
+      <button type="button" data-filter="all">All · ${total}</button>
     `;
     filters.querySelectorAll("button").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -1812,14 +1868,14 @@ function updateInventoryList(inventory, lpByUnit) {
       });
     });
   }
-  renderInventoryRows("all");
+  renderInventoryRows("listed");
 }
 
 function renderInventoryRows(filter) {
   const list = document.querySelector(".inv-list");
   if (!list) return;
   const ids = Object.keys(unitData).sort((a, b) => {
-    const order = { Listed: 0, Pending: 1, "Model Home": 2, Available: 3, Reserved: 4, Sold: 5 };
+    const order = { Listed: 0, Pending: 1, Reserved: 2, Sold: 3, "Model Home": 4, Available: 5 };
     return (order[unitData[a].status] ?? 9) - (order[unitData[b].status] ?? 9) || a.localeCompare(b);
   });
   const filtered = ids.filter(id => {
@@ -1840,16 +1896,20 @@ function renderInventoryRows(filter) {
     const u = unitData[id];
     const specs = [u.beds !== "—" && u.beds, u.baths !== "—" && u.baths].filter(Boolean).join(" · ");
     const mls = u.mls && u.mls !== "—" ? " · MLS " + u.mls : "";
+    const thumb = u.photo
+      ? `<div class="inv-thumb"><img src="${u.photo}" alt="${id}" loading="lazy" referrerpolicy="no-referrer"></div>`
+      : `<div class="inv-thumb"></div>`;
     return `
-      <div class="inv-row" data-status="${(u.status || "").toLowerCase()}">
-        <div class="inv-thumb"></div>
+      <div class="inv-row" data-status="${(u.status || "").toLowerCase()}" onclick="if(!event.target.closest('a'))openDrawer('${id}')" style="cursor:pointer">
+        ${thumb}
         <div>
           <div class="inv-address">${id} · ${(u.address || "Lowell Heights").split(",")[0]}<small>${u.status || "—"}${mls}</small></div>
         </div>
         <div class="inv-price">${u.price || "—"}</div>
         <div class="inv-specs">${specs || u.floorPlan || "—"}<strong>${u.sqft && u.sqft !== "—" ? u.sqft : ""}</strong></div>
-        <div class="inv-dom">DOM<strong>${u.dom && u.dom !== "—" ? u.dom : "—"}</strong></div>
-        <div class="inv-action"><a href="#" onclick="openDrawer('${id}');return false;">${u.listingUrl ? "View Listing ↗" : "View Details ↗"}</a></div>
+        <div class="inv-action">${u.listingUrl
+          ? `<a href="${u.listingUrl}" target="_blank" rel="noopener">View Listing ↗</a>`
+          : `<a href="#" onclick="openDrawer('${id}');return false;">View Details</a>`}</div>
       </div>`;
   }).join("");
 }
@@ -1871,7 +1931,11 @@ function updateActionsList(actions) {
 
 function updateFeedbackList(feedback) {
   const card = document.getElementById("feedbackList") || document.querySelector("#feedback .card");
-  if (!card || !feedback || !feedback.length) return;
+  if (!card) return;
+  if (!feedback || !feedback.length) {
+    card.innerHTML = '<div class="quote"><div class="quote-type"><span class="sentiment mixed">Live</span></div><q>No buyer feedback in the sheet yet.</q></div>';
+    return;
+  }
   card.innerHTML = feedback.map(f => {
     const sent = (f["Sentiment"] || "neutral").toLowerCase();
     const cls = sent === "positive" ? "positive" : sent === "negative" || sent === "concern" ? "concern" : "mixed";
@@ -1887,6 +1951,32 @@ function updateFeedbackList(feedback) {
 
 
 let lastTraffic = [];
+
+function updateMarketing(rows) {
+  const list = document.querySelector("#marketing .property-list");
+  const sub = document.querySelector("#marketing .section-head p");
+  if (!list) return;
+  if (!rows || !rows.length) {
+    if (sub) sub.textContent = "No campaigns in Marketing Roadmap yet";
+    list.innerHTML = '<div class="property-row"><div class="property-name"><strong>No marketing activity logged</strong><span>Add rows in the Marketing Roadmap tab</span></div></div>';
+    return;
+  }
+  if (sub) sub.textContent = rows.length + " campaign" + (rows.length === 1 ? "" : "s") + " from Marketing Roadmap";
+  list.innerHTML = rows.map(r => {
+    const name = r["Campaign or Activity"] || r["Marketing Type"] || "Campaign";
+    const type = [r["Marketing Type"], r["Status"]].filter(Boolean).join(" · ");
+    const impressions = r["Impressions"] || r["Reach"] || r["Audience"] || "—";
+    const views = r["Property Views"] || r["Clicks"] || r["Goal"] || "—";
+    const status = r["Status"] || "—";
+    return `<div class="property-row">
+      <div class="property-name"><strong>${name}</strong><span>${type}</span></div>
+      <div><small>Audience / Reach</small><strong>${impressions}</strong></div>
+      <div><small>Goal</small><strong>${views}</strong></div>
+      <div><small>Status</small><strong>${status}</strong></div>
+    </div>`;
+  }).join("");
+}
+
 function updateTraffic(traffic) {
   lastTraffic = traffic || [];
   const totalEl = document.querySelector(".traffic-total");
@@ -1898,16 +1988,48 @@ function updateTraffic(traffic) {
     const ty = r["Traffic Type"] || "Other";
     counts[ty] = (counts[ty] || 0) + 1;
   });
-  const map = {
+  const typeMap = {
     "Open House": "tt-open",
     "Appointment": "tt-appt",
     "Broker": "tt-broker",
     "Walk-In": "tt-walk"
   };
-  Object.keys(map).forEach(k => {
-    const el = document.getElementById(map[k]);
+  Object.keys(typeMap).forEach(k => {
+    const el = document.getElementById(typeMap[k]);
     if (el) el.textContent = counts[k] || 0;
   });
+
+  // Groups by Week — live from Activity Date
+  const barsEl = document.querySelector(".bars");
+  if (barsEl) {
+    const weekBuckets = {};
+    lastTraffic.forEach(r => {
+      const raw = r["Activity Date"] || "";
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return;
+      // week starting Monday
+      const day = (d.getDay() + 6) % 7;
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - day);
+      monday.setHours(0,0,0,0);
+      const key = monday.toISOString().slice(0, 10);
+      weekBuckets[key] = (weekBuckets[key] || 0) + 1;
+    });
+    const weeks = Object.keys(weekBuckets).sort();
+    const last5 = weeks.slice(-5);
+    if (!last5.length) {
+      barsEl.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:24px 8px">No dated traffic yet</div>';
+    } else {
+      const max = Math.max(...last5.map(k => weekBuckets[k]), 1);
+      barsEl.innerHTML = last5.map(k => {
+        const n = weekBuckets[k];
+        const h = Math.max(12, Math.round((n / max) * 160));
+        const label = new Date(k + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        return '<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div class="bar" style="height:' + h + 'px" title="' + n + ' groups"></div><span style="font-size:9px;color:var(--muted)">' + label + '</span></div>';
+      }).join("");
+    }
+  }
+
   document.querySelectorAll(".traffic-type").forEach(row => {
     row.onclick = () => {
       const type = row.dataset.type;
@@ -1925,6 +2047,63 @@ function updateTraffic(traffic) {
     };
   });
 }
+
+
+
+// ── Site plan pins (Map X / Map Y percentages) ──
+
+function openDrawer(id) {
+  const d = unitData[id];
+  if (!d) return;
+  const drawer = document.getElementById("drawer");
+  const empty = document.getElementById("emptyMap");
+  if (!drawer) return;
+
+  const photoEl = document.getElementById("drawerPhoto");
+  if (photoEl) {
+    if (d.photo) {
+      photoEl.innerHTML = '<img src="' + d.photo + '" alt="' + id + '" loading="lazy" referrerpolicy="no-referrer">';
+      photoEl.style.display = "block";
+    } else {
+      photoEl.innerHTML = "";
+      photoEl.style.display = "none";
+    }
+  }
+  const statusEl = document.getElementById("drawerStatus");
+  if (statusEl) statusEl.textContent = d.status || "—";
+  document.getElementById("drawerUnit").textContent = id;
+  document.getElementById("drawerAddress").textContent = d.address || ("Lowell Heights · Unit " + id);
+  document.getElementById("drawerPrice").textContent = d.price || "—";
+  document.getElementById("drawerBeds").textContent = d.beds || "—";
+  document.getElementById("drawerBaths").textContent = d.baths || "—";
+  document.getElementById("drawerSqft").textContent = d.sqft || "—";
+  document.getElementById("drawerMls").textContent = d.mls || "—";
+  document.getElementById("drawerConstruction").textContent = d.construction || "—";
+
+  const link = document.querySelector(".drawer-link");
+  if (link) {
+    if (d.listingUrl) {
+      link.href = d.listingUrl;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "View First and Main Listing ↗";
+      link.style.display = "";
+    } else {
+      link.removeAttribute("href");
+      link.onclick = (e) => e.preventDefault();
+      link.textContent = "No public listing link";
+    }
+  }
+
+  if (empty) empty.style.display = "none";
+  drawer.classList.add("open");
+}
+
+document.getElementById("drawerClose")?.addEventListener("click", () => {
+  document.getElementById("drawer")?.classList.remove("open");
+  const empty = document.getElementById("emptyMap");
+  if (empty) empty.style.display = "block";
+});
 
 const SITE_PLAN_IMAGE_URL = "community-map.jpg";
 
@@ -1953,57 +2132,14 @@ function rebuildMapMarkers() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "lot-marker " + safeClass;
-    btn.textContent = id;
     btn.style.left = x + "%";
     btn.style.top = y + "%";
+    btn.textContent = id;
     btn.title = id + " · " + (d.status || "");
     btn.addEventListener("click", () => openDrawer(id));
     layer.appendChild(btn);
   });
 }
-
-const drawer = document.getElementById("drawer");
-const empty = document.getElementById("emptyMap");
-
-function openDrawer(id) {
-  const d = unitData[id];
-  if (!d) return;
-  const st = (d.status || "").toLowerCase();
-  document.getElementById("drawerStatus").textContent = d.status;
-  document.getElementById("drawerStatus").style.color =
-    st === "listed" || st === "model home" ? "var(--sage)" :
-    st === "available" ? "var(--lime)" :
-    st === "pending" || st === "reserved" ? "var(--sand)" : "var(--clay)";
-  document.getElementById("drawerUnit").textContent = id;
-  document.getElementById("drawerAddress").textContent = d.address;
-  document.getElementById("drawerPrice").textContent = d.price;
-  document.getElementById("drawerBeds").textContent = d.beds;
-  document.getElementById("drawerBaths").textContent = d.baths;
-  document.getElementById("drawerSqft").textContent = d.sqft;
-  document.getElementById("drawerMls").textContent = d.mls;
-  document.getElementById("drawerDom").textContent = d.dom;
-  document.getElementById("drawerConstruction").textContent = d.construction;
-  const link = document.querySelector(".drawer-link");
-  if (link) {
-    if (d.listingUrl) {
-      link.href = d.listingUrl;
-      link.target = "_blank";
-      link.rel = "noopener";
-      link.textContent = "View First and Main Listing ↗";
-    } else {
-      link.href = "#";
-      link.removeAttribute("target");
-      link.textContent = "Listing link unavailable";
-    }
-  }
-  empty.style.display = "none";
-  drawer.classList.add("open");
-}
-
-document.getElementById("drawerClose").addEventListener("click", () => {
-  drawer.classList.remove("open");
-  empty.style.display = "block";
-});
 
 // Load live sheet + MLS data (updates KPIs, inventory, site-plan pins)
 loadLiveData();
