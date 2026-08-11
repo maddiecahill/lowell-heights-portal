@@ -2226,6 +2226,649 @@ document.querySelectorAll(".inv-filters button").forEach(btn => {
     btn.classList.add("active");
   });
 });
+// ========================================================
+// LOWELL HEIGHTS — REPORTING PERIOD FILTER FIX
+// ========================================================
+
+// Save the original dashboard functions.
+// We will reuse them without changing the existing design or data loading.
+const LH_originalUpdateKPIs = updateKPIs;
+const LH_originalUpdateTraffic = updateTraffic;
+const LH_originalUpdateFeedbackList = updateFeedbackList;
+const LH_originalApplyRange = applyRange;
+
+
+// ========================================================
+// STORE THE COMPLETE UNFILTERED DATA
+// ========================================================
+
+let LH_reportingData = {
+  ready: false,
+  inventory: [],
+  traffic: [],
+  leads: [],
+  feedback: [],
+  actions: [],
+  lpByUnit: {}
+};
+
+
+// ========================================================
+// DATE PARSER
+//
+// Supports:
+// 8/4/2026
+// 08/04/2026
+// 2026-08-04
+// 2026-08-04T12:00:00
+// ========================================================
+
+function LH_parseDate(value) {
+
+  if (!value) return null;
+
+  const text = String(value).trim();
+
+  if (!text) return null;
+
+
+  // --------------------------------
+  // M/D/YYYY or MM/DD/YYYY
+  // --------------------------------
+
+  let match = text.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/
+  );
+
+  if (match) {
+
+    let year = Number(match[3]);
+
+    if (year < 100) {
+      year += 2000;
+    }
+
+    return new Date(
+      year,
+      Number(match[1]) - 1,
+      Number(match[2]),
+      12,
+      0,
+      0,
+      0
+    );
+  }
+
+
+  // --------------------------------
+  // YYYY-MM-DD
+  // --------------------------------
+
+  match = text.match(
+    /^(\d{4})-(\d{1,2})-(\d{1,2})/
+  );
+
+  if (match) {
+
+    return new Date(
+      Number(match[1]),
+      Number(match[2]) - 1,
+      Number(match[3]),
+      12,
+      0,
+      0,
+      0
+    );
+  }
+
+
+  // --------------------------------
+  // Fallback for timestamps
+  // --------------------------------
+
+  const parsed = new Date(text);
+
+  if (isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return new Date(
+    parsed.getFullYear(),
+    parsed.getMonth(),
+    parsed.getDate(),
+    12,
+    0,
+    0,
+    0
+  );
+}
+
+
+// ========================================================
+// GET CURRENT REPORTING PERIOD
+// ========================================================
+
+function LH_getReportingRange() {
+
+  const startInput =
+    document.getElementById("startDate");
+
+  const endInput =
+    document.getElementById("endDate");
+
+
+  if (
+    !startInput ||
+    !endInput ||
+    !startInput.value ||
+    !endInput.value
+  ) {
+    return null;
+  }
+
+
+  const start =
+    LH_parseDate(startInput.value);
+
+  const end =
+    LH_parseDate(endInput.value);
+
+
+  if (!start || !end) {
+    return null;
+  }
+
+
+  // Make date range inclusive.
+
+  start.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  end.setHours(
+    23,
+    59,
+    59,
+    999
+  );
+
+
+  return {
+    start,
+    end
+  };
+}
+
+
+// ========================================================
+// FILTER SHEET ROWS BY DATE
+// ========================================================
+
+function LH_filterByDate(
+  rows,
+  dateField
+) {
+
+  const range =
+    LH_getReportingRange();
+
+
+  if (!range) {
+    return rows || [];
+  }
+
+
+  return (rows || []).filter(
+    row => {
+
+      const rowDate =
+        LH_parseDate(
+          row[dateField]
+        );
+
+
+      if (!rowDate) {
+        return false;
+      }
+
+
+      return (
+        rowDate >= range.start &&
+        rowDate <= range.end
+      );
+    }
+  );
+}
+
+
+// ========================================================
+// BUYER VISITS
+//
+// Traffic records = visitor groups.
+// Visitor Count = actual buyer visits.
+//
+// Example:
+// 3 traffic rows
+// Visitor Counts = 2, 4, 1
+//
+// Buyer Visits = 7
+// Visitor Groups = 3
+// ========================================================
+
+function LH_updateBuyerVisits(
+  traffic
+) {
+
+  const rows =
+    traffic || [];
+
+
+  const visitorGroups =
+    rows.length;
+
+
+  const buyerVisits =
+    rows.reduce(
+      (
+        total,
+        row
+      ) => {
+
+        const raw =
+          String(
+            row["Visitor Count"] || ""
+          )
+          .replace(
+            /,/g,
+            ""
+          )
+          .trim();
+
+
+        const count =
+          Number(raw);
+
+
+        // If Visitor Count is missing,
+        // count the traffic row as one group/visit.
+
+        if (
+          !raw ||
+          isNaN(count)
+        ) {
+
+          return total + 1;
+        }
+
+
+        return total + count;
+
+      },
+      0
+    );
+
+
+  const metrics =
+    document.querySelectorAll(
+      ".metric"
+    );
+
+
+  // Metric #2 = Buyer Visits
+
+  if (metrics[1]) {
+
+    const value =
+      metrics[1].querySelector(
+        ".metric-value"
+      );
+
+
+    const sub =
+      metrics[1].querySelector(
+        ".metric-sub"
+      );
+
+
+    if (value) {
+
+      value.textContent =
+        buyerVisits;
+    }
+
+
+    if (sub) {
+
+      sub.textContent =
+        visitorGroups +
+        " visitor group" +
+        (
+          visitorGroups === 1
+            ? ""
+            : "s"
+        );
+    }
+  }
+}
+
+
+// ========================================================
+// UPDATE DASHBOARD FOR SELECTED PERIOD
+// ========================================================
+
+function LH_renderSelectedPeriod() {
+
+  if (
+    !LH_reportingData.ready
+  ) {
+    return;
+  }
+
+
+  // --------------------------------
+  // TRAFFIC
+  // --------------------------------
+
+  const filteredTraffic =
+    LH_filterByDate(
+      LH_reportingData.traffic,
+      "Activity Date"
+    );
+
+
+  // --------------------------------
+  // LEADS
+  // --------------------------------
+
+  const filteredLeads =
+    LH_filterByDate(
+      LH_reportingData.leads,
+      "Lead Date"
+    );
+
+
+  // --------------------------------
+  // BUYER FEEDBACK
+  // --------------------------------
+
+  const filteredFeedback =
+    LH_filterByDate(
+      LH_reportingData.feedback,
+      "Feedback Date"
+    );
+
+
+  // --------------------------------
+  // EXECUTIVE SUMMARY
+  // --------------------------------
+
+  LH_originalUpdateKPIs(
+    LH_reportingData.inventory,
+    filteredTraffic,
+    filteredLeads,
+    filteredFeedback,
+    LH_reportingData.actions,
+    LH_reportingData.lpByUnit
+  );
+
+
+  // Correct Buyer Visits metric.
+
+  LH_updateBuyerVisits(
+    filteredTraffic
+  );
+
+
+  // --------------------------------
+  // TRAFFIC SECTION
+  // --------------------------------
+
+  LH_originalUpdateTraffic(
+    filteredTraffic
+  );
+
+
+  // --------------------------------
+  // BUYER FEEDBACK SECTION
+  // --------------------------------
+
+  LH_originalUpdateFeedbackList(
+    filteredFeedback
+  );
+}
+
+
+// ========================================================
+// INTERCEPT INITIAL KPI UPDATE
+//
+// loadLiveData() already calls updateKPIs().
+// We use that call to save a complete copy of the live data.
+// ========================================================
+
+updateKPIs = function(
+  inventory,
+  traffic,
+  leads,
+  feedback,
+  actions,
+  lpByUnit
+) {
+
+  LH_reportingData = {
+
+    ready: true,
+
+    inventory:
+      inventory || [],
+
+    traffic:
+      traffic || [],
+
+    leads:
+      leads || [],
+
+    feedback:
+      feedback || [],
+
+    actions:
+      actions || [],
+
+    lpByUnit:
+      lpByUnit || {}
+  };
+
+
+  const filteredTraffic =
+    LH_filterByDate(
+      traffic,
+      "Activity Date"
+    );
+
+
+  const filteredLeads =
+    LH_filterByDate(
+      leads,
+      "Lead Date"
+    );
+
+
+  const filteredFeedback =
+    LH_filterByDate(
+      feedback,
+      "Feedback Date"
+    );
+
+
+  LH_originalUpdateKPIs(
+    inventory,
+    filteredTraffic,
+    filteredLeads,
+    filteredFeedback,
+    actions,
+    lpByUnit
+  );
+
+
+  LH_updateBuyerVisits(
+    filteredTraffic
+  );
+};
+
+
+// ========================================================
+// TRAFFIC SECTION FILTER
+// ========================================================
+
+updateTraffic = function(
+  traffic
+) {
+
+  const filteredTraffic =
+    LH_filterByDate(
+      traffic,
+      "Activity Date"
+    );
+
+
+  LH_originalUpdateTraffic(
+    filteredTraffic
+  );
+};
+
+
+// ========================================================
+// BUYER FEEDBACK FILTER
+// ========================================================
+
+updateFeedbackList = function(
+  feedback
+) {
+
+  const filteredFeedback =
+    LH_filterByDate(
+      feedback,
+      "Feedback Date"
+    );
+
+
+  LH_originalUpdateFeedbackList(
+    filteredFeedback
+  );
+};
+
+
+// ========================================================
+// OVERRIDE applyRange()
+//
+// This makes:
+// Previous Tue–Tue
+// 30 Days
+// 90 Days
+//
+// actually update the dashboard instead of only changing
+// the text displayed in the Reporting Period bar.
+// ========================================================
+
+applyRange = function(
+  start,
+  end
+) {
+
+  LH_originalApplyRange(
+    start,
+    end
+  );
+
+
+  LH_renderSelectedPeriod();
+};
+
+
+// ========================================================
+// CUSTOM START / END DATE INPUTS
+// ========================================================
+
+[
+  "startDate",
+  "endDate"
+].forEach(
+  id => {
+
+    const input =
+      document.getElementById(id);
+
+
+    if (!input) {
+      return;
+    }
+
+
+    input.addEventListener(
+      "change",
+      () => {
+
+        const startInput =
+          document.getElementById(
+            "startDate"
+          );
+
+
+        const endInput =
+          document.getElementById(
+            "endDate"
+          );
+
+
+        if (
+          !startInput ||
+          !endInput ||
+          !startInput.value ||
+          !endInput.value
+        ) {
+          return;
+        }
+
+
+        const start =
+          LH_parseDate(
+            startInput.value
+          );
+
+
+        const end =
+          LH_parseDate(
+            endInput.value
+          );
+
+
+        if (
+          !start ||
+          !end
+        ) {
+          return;
+        }
+
+
+        if (
+          start > end
+        ) {
+          return;
+        }
+
+
+        LH_renderSelectedPeriod();
+      }
+    );
+  }
+);
+
+
+// ========================================================
+// END LOWELL HEIGHTS REPORTING PERIOD FILTER FIX
+// ========================================================
 </script>
 </body>
 </html>
