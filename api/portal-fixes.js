@@ -1,4 +1,11 @@
 (() => {
+  // ========================================================
+  // LOWELL HEIGHTS — PORTAL FIXES
+  // - Buyer Showings full detail
+  // - Rolling last 7 days default
+  // - Quick navigation fix
+  // ========================================================
+
   const hasValue = (value) =>
     value !== undefined &&
     value !== null &&
@@ -48,8 +55,13 @@
     "Traffic ID"
   ];
 
+  // ========================================================
+  // BUYER SHOWING DETAIL
+  // ========================================================
+
   function renderTrafficDetail(rows, title) {
     const detail = document.getElementById("trafficDetail");
+
     if (!detail) return;
 
     detail.style.display = "block";
@@ -57,7 +69,7 @@
     if (!rows || !rows.length) {
       detail.innerHTML = `
         <div style="color:var(--muted);font-size:13px">
-          No showing records found.
+          No showing records found for this reporting period.
         </div>
       `;
       return;
@@ -75,6 +87,7 @@
       ">
         <div>
           <div class="eyebrow">Buyer Showing Detail</div>
+
           <div style="
             font-family:'Cormorant Garamond',Georgia,serif;
             font-size:26px;
@@ -84,7 +97,11 @@
             ${esc(title)}
           </div>
         </div>
-        <div style="font-size:12px;color:var(--muted)">
+
+        <div style="
+          font-size:12px;
+          color:var(--muted);
+        ">
           ${rows.length} record${rows.length === 1 ? "" : "s"}
         </div>
       </div>
@@ -101,7 +118,8 @@
           .filter((key) => hasValue(r[key]))
           .map((key) => [key, r[key]]);
 
-        // Automatically include any future logged columns too.
+        // Automatically include future fields added
+        // to the Physical Traffic sheet.
         Object.keys(r).forEach((key) => {
           if (
             key !== "Notes" &&
@@ -119,6 +137,7 @@
             padding:22px;
             margin-bottom:16px;
           ">
+
             <div style="
               display:flex;
               justify-content:space-between;
@@ -126,6 +145,7 @@
               align-items:flex-start;
               margin-bottom:18px;
             ">
+
               <div>
                 <div style="
                   font-family:'Cormorant Garamond',Georgia,serif;
@@ -142,7 +162,11 @@
                   font-size:12px;
                 ">
                   ${esc(r["Activity Date"] || "")}
-                  ${hasValue(r["Unit ID"]) ? " · Unit " + esc(r["Unit ID"]) : ""}
+                  ${
+                    hasValue(r["Unit ID"])
+                      ? " · Unit " + esc(r["Unit ID"])
+                      : ""
+                  }
                 </div>
               </div>
 
@@ -155,6 +179,7 @@
               ">
                 ${esc(r["Traffic Type"] || "Showing")}
               </div>
+
             </div>
 
             <div style="
@@ -165,12 +190,14 @@
               border:1px solid var(--line);
               margin-bottom:${hasValue(notes) ? "18px" : "0"};
             ">
+
               ${knownFields.map(([key, value]) => `
                 <div style="
                   background:var(--paper);
                   padding:13px 14px;
                   min-height:66px;
                 ">
+
                   <div style="
                     font-size:9px;
                     color:var(--muted);
@@ -189,15 +216,20 @@
                   ">
                     ${esc(value)}
                   </div>
+
                 </div>
               `).join("")}
+
             </div>
 
-            ${hasValue(notes) ? `
+            ${
+              hasValue(notes)
+                ? `
               <div style="
                 border-left:3px solid var(--bronze);
                 padding:4px 0 4px 16px;
               ">
+
                 <div style="
                   font-size:9px;
                   letter-spacing:.12em;
@@ -216,8 +248,12 @@
                 ">
                   ${esc(notes)}
                 </div>
+
               </div>
-            ` : ""}
+            `
+                : ""
+            }
+
           </div>
         `;
       }).join("")}
@@ -229,60 +265,101 @@
     });
   }
 
+  // ========================================================
+  // BUILD BUYER SHOWING BREAKDOWN
+  // ========================================================
+
   function rebuildTrafficTypes() {
     if (typeof lastTraffic === "undefined") return;
 
-    const firstRow = document.querySelector("#traffic .traffic-type");
+    const firstRow =
+      document.querySelector("#traffic .traffic-type");
+
     if (!firstRow) return;
 
     const card = firstRow.closest(".card");
+
     if (!card) return;
 
-    const rows = Array.isArray(lastTraffic) ? lastTraffic : [];
+    const rows =
+      Array.isArray(lastTraffic)
+        ? lastTraffic
+        : [];
 
-    // Rename the card heading.
-    const eyebrow = card.querySelector(".eyebrow");
-    if (eyebrow) eyebrow.textContent = "Showing Breakdown";
+    const eyebrow =
+      card.querySelector(".eyebrow");
 
-    // Remove old hard-coded type rows.
-    card.querySelectorAll(".traffic-type").forEach((row) => row.remove());
+    if (eyebrow) {
+      eyebrow.textContent =
+        "Showing Breakdown";
+    }
+
+    // Remove old hard-coded rows.
+    card
+      .querySelectorAll(".traffic-type")
+      .forEach((row) => row.remove());
 
     const counts = {};
+
     rows.forEach((r) => {
-      const type = r["Traffic Type"] || "Other";
-      counts[type] = (counts[type] || 0) + 1;
+      const type =
+        r["Traffic Type"] || "Other";
+
+      counts[type] =
+        (counts[type] || 0) + 1;
     });
 
-    function createRow(label, count, records) {
-      const row = document.createElement("div");
-      row.className = "row traffic-type";
-      row.style.cursor = "pointer";
+    function createRow(
+      label,
+      count,
+      records
+    ) {
+      const row =
+        document.createElement("div");
+
+      row.className =
+        "row traffic-type";
+
+      row.style.cursor =
+        "pointer";
 
       row.innerHTML = `
         <span>${esc(label)}</span>
         <b>${count}</b>
       `;
 
-      row.addEventListener("click", () => {
-        renderTrafficDetail(records, label);
+      row.addEventListener(
+        "click",
+        () => {
+          renderTrafficDetail(
+            records,
+            label
+          );
 
-        card
-          .querySelectorAll(".traffic-type")
-          .forEach((r) => r.style.background = "");
+          card
+            .querySelectorAll(
+              ".traffic-type"
+            )
+            .forEach((r) => {
+              r.style.background = "";
+            });
 
-        row.style.background = "#f9f6f0";
-      });
+          row.style.background =
+            "#f9f6f0";
+        }
+      );
 
       card.appendChild(row);
     }
 
-    // First option shows every logged buyer showing.
+    // Show all showing records first.
     createRow(
       "All Buyer Showings",
       rows.length,
       rows
     );
 
+    // Then break out by traffic type.
     Object.keys(counts)
       .sort()
       .forEach((type) => {
@@ -290,80 +367,216 @@
           type,
           counts[type],
           rows.filter(
-            (r) => (r["Traffic Type"] || "Other") === type
+            (r) =>
+              (
+                r["Traffic Type"] ||
+                "Other"
+              ) === type
           )
         );
       });
   }
 
+  // ========================================================
+  // QUICK NAVIGATION FIX
+  // ========================================================
+
   function fixQuickNavigation() {
-    const links = document.querySelectorAll(
-      '.jumpnav a[href^="#"], .primary-nav a[href^="#"]'
-    );
+    const links =
+      document.querySelectorAll(
+        '.jumpnav a[href^="#"], .primary-nav a[href^="#"]'
+      );
 
     links.forEach((link) => {
-      link.addEventListener("click", (event) => {
-        const id = link.getAttribute("href");
-        if (!id || id === "#") return;
+      link.addEventListener(
+        "click",
+        (event) => {
+          const id =
+            link.getAttribute("href");
 
-        const target = document.querySelector(id);
-        if (!target) return;
+          if (
+            !id ||
+            id === "#"
+          ) {
+            return;
+          }
 
-        event.preventDefault();
+          const target =
+            document.querySelector(id);
 
-        target.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
+          if (!target) return;
 
-        document
-          .querySelectorAll(".jumpnav a, .primary-nav a")
-          .forEach((a) => a.classList.remove("active"));
+          event.preventDefault();
 
-        link.classList.add("active");
+          target.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
 
-        try {
-          history.replaceState(null, "", id);
-        } catch (e) {}
-      });
+          document
+            .querySelectorAll(
+              ".jumpnav a, .primary-nav a"
+            )
+            .forEach((a) =>
+              a.classList.remove(
+                "active"
+              )
+            );
+
+          link.classList.add(
+            "active"
+          );
+
+          try {
+            history.replaceState(
+              null,
+              "",
+              id
+            );
+          } catch (e) {}
+        }
+      );
     });
   }
 
-  function updateTrafficLabels() {
-    const heading = document.querySelector("#traffic .section-head h2");
-    if (heading) heading.textContent = "Buyer Showings";
+  // ========================================================
+  // LABEL CHANGES
+  // ========================================================
 
-    const total = document.querySelector("#traffic .traffic-total small");
-    if (total) total.textContent = "Showing Groups";
+  function updateTrafficLabels() {
+    const heading =
+      document.querySelector(
+        "#traffic .section-head h2"
+      );
+
+    if (heading) {
+      heading.textContent =
+        "Buyer Showings";
+    }
+
+    const total =
+      document.querySelector(
+        "#traffic .traffic-total small"
+      );
+
+    if (total) {
+      total.textContent =
+        "Showing Groups";
+    }
   }
 
-  // Keep the existing traffic calculations/chart,
-  // but replace its old limited detail view afterward.
-  if (typeof updateTraffic === "function") {
-    const originalUpdateTraffic = updateTraffic;
+  // ========================================================
+  // DEFAULT REPORTING PERIOD
+  // LAST 7 CALENDAR DAYS INCLUDING TODAY
+  //
+  // Example:
+  // Aug 25 = Aug 19 through Aug 25
+  // ========================================================
 
-    updateTraffic = function (traffic) {
-      originalUpdateTraffic(traffic);
+  function setDefaultLast7Days() {
+    const end =
+      new Date();
 
-      window.setTimeout(() => {
-        rebuildTrafficTypes();
-      }, 0);
+    end.setHours(
+      0,
+      0,
+      0,
+      0
+    );
+
+    const start =
+      new Date(end);
+
+    start.setDate(
+      end.getDate() - 6
+    );
+
+    if (
+      typeof applyRange ===
+      "function"
+    ) {
+      applyRange(
+        start,
+        end
+      );
+    }
+  }
+
+  // ========================================================
+  // KEEP SHOWING BREAKDOWN UPDATED
+  // WHEN REPORTING PERIOD CHANGES
+  // ========================================================
+
+  if (
+    typeof updateTraffic ===
+    "function"
+  ) {
+    const originalUpdateTraffic =
+      updateTraffic;
+
+    updateTraffic = function (
+      traffic
+    ) {
+      originalUpdateTraffic(
+        traffic
+      );
+
+      window.setTimeout(
+        () => {
+          rebuildTrafficTypes();
+        },
+        0
+      );
     };
   }
 
+  // The reporting-period code also directly
+  // calls LH_renderSelectedPeriod().
+  if (
+    typeof LH_renderSelectedPeriod ===
+    "function"
+  ) {
+    const originalReportingRender =
+      LH_renderSelectedPeriod;
+
+    LH_renderSelectedPeriod =
+      function () {
+        originalReportingRender();
+
+        window.setTimeout(
+          () => {
+            rebuildTrafficTypes();
+          },
+          0
+        );
+      };
+  }
+
+  // ========================================================
+  // INITIALIZE
+  // ========================================================
+
   function initPortalFixes() {
+    // Override old Tuesday–Tuesday default.
+    setDefaultLast7Days();
+
     updateTrafficLabels();
+
     fixQuickNavigation();
 
     if (
-      typeof lastTraffic !== "undefined" &&
+      typeof lastTraffic !==
+        "undefined" &&
       Array.isArray(lastTraffic)
     ) {
       rebuildTrafficTypes();
     }
   }
 
-  if (document.readyState === "loading") {
+  if (
+    document.readyState ===
+    "loading"
+  ) {
     document.addEventListener(
       "DOMContentLoaded",
       initPortalFixes
