@@ -585,3 +585,477 @@
     initPortalFixes();
   }
 })();
+// ========================================================
+// LOWELL HEIGHTS — MERGED BUYER FEEDBACK
+//
+// Combines:
+// 1. Formal Buyer Feedback records
+// 2. Notes logged with Buyer Showings / Physical Traffic
+//
+// No duplicate data entry required.
+// ========================================================
+
+(() => {
+
+  function PF_hasText(value) {
+    return (
+      value !== undefined &&
+      value !== null &&
+      String(value).trim() !== ""
+    );
+  }
+
+
+  // --------------------------------------------------------
+  // Convert a showing note into a Buyer Feedback-style record
+  // --------------------------------------------------------
+
+  function PF_showingToFeedback(row, index) {
+
+    const name =
+      row["Event or Agent Name"] ||
+      row["Traffic Type"] ||
+      "Buyer Showing";
+
+    const note =
+      row["Notes"] || "";
+
+    return {
+      "Feedback Date":
+        row["Activity Date"] || "",
+
+      "Feedback ID":
+        "SHOWING-" +
+        (
+          row["Traffic ID"] ||
+          index
+        ),
+
+      "Lead ID":
+        "",
+
+      "Unit ID":
+        row["Unit ID"] || "",
+
+      "Traffic ID":
+        row["Traffic ID"] || "",
+
+      "Feedback Category":
+        row["Traffic Type"] ||
+        "Buyer Showing",
+
+      "Sentiment":
+        "Showing Note",
+
+      "Feedback Detail":
+        name +
+        " — " +
+        note,
+
+      "Action Recommended":
+        "",
+
+      "Buyer or Visitor Type":
+        row["Traffic Type"] ||
+        "Showing",
+
+      "_fromTraffic":
+        "1"
+    };
+  }
+
+
+  // --------------------------------------------------------
+  // Merge formal feedback + showing notes
+  // --------------------------------------------------------
+
+  function PF_mergeBuyerFeedback(
+    formalFeedback,
+    traffic
+  ) {
+
+    const formal =
+      (formalFeedback || [])
+        .map(row => ({ ...row }));
+
+    const trafficRows =
+      (traffic || [])
+        .filter(
+          row =>
+            PF_hasText(
+              row["Notes"]
+            )
+        );
+
+    const formalByTrafficId =
+      {};
+
+    formal.forEach(
+      (row, index) => {
+
+        const trafficId =
+          String(
+            row["Traffic ID"] ||
+            ""
+          ).trim();
+
+        if (trafficId) {
+          formalByTrafficId[
+            trafficId
+          ] = index;
+        }
+      }
+    );
+
+
+    trafficRows.forEach(
+      (row, index) => {
+
+        const trafficId =
+          String(
+            row["Traffic ID"] ||
+            ""
+          ).trim();
+
+        const notes =
+          String(
+            row["Notes"] ||
+            ""
+          ).trim();
+
+        const name =
+          row["Event or Agent Name"] ||
+          row["Traffic Type"] ||
+          "Buyer Showing";
+
+
+        // ------------------------------------------
+        // If a formal feedback record already exists
+        // for this showing, keep it as the main record
+        // and add any additional showing notes to it.
+        // ------------------------------------------
+
+        if (
+          trafficId &&
+          formalByTrafficId[
+            trafficId
+          ] !== undefined
+        ) {
+
+          const target =
+            formal[
+              formalByTrafficId[
+                trafficId
+              ]
+            ];
+
+          const currentDetail =
+            String(
+              target[
+                "Feedback Detail"
+              ] ||
+              ""
+            ).trim();
+
+
+          if (
+            notes &&
+            !currentDetail.includes(
+              notes
+            )
+          ) {
+
+            target[
+              "Feedback Detail"
+            ] =
+              currentDetail
+                ? (
+                    currentDetail +
+                    " — Showing notes from " +
+                    name +
+                    ": " +
+                    notes
+                  )
+                : (
+                    name +
+                    " — " +
+                    notes
+                  );
+          }
+
+
+          if (
+            !PF_hasText(
+              target[
+                "Buyer or Visitor Type"
+              ]
+            )
+          ) {
+            target[
+              "Buyer or Visitor Type"
+            ] =
+              row[
+                "Traffic Type"
+              ] ||
+              "Showing";
+          }
+
+          return;
+        }
+
+
+        // ------------------------------------------
+        // Otherwise create a feedback entry from
+        // the showing notes.
+        // ------------------------------------------
+
+        formal.push(
+          PF_showingToFeedback(
+            row,
+            index
+          )
+        );
+      }
+    );
+
+
+    // Newest first.
+
+    formal.sort(
+      (a, b) => {
+
+        const da =
+          new Date(
+            a["Feedback Date"] ||
+            0
+          );
+
+        const db =
+          new Date(
+            b["Feedback Date"] ||
+            0
+          );
+
+        return db - da;
+      }
+    );
+
+
+    return formal;
+  }
+
+
+  // --------------------------------------------------------
+  // Get only rows inside current Reporting Period
+  // --------------------------------------------------------
+
+  function PF_getCurrentFeedbackData() {
+
+    if (
+      typeof LH_reportingData ===
+        "undefined" ||
+      !LH_reportingData ||
+      !LH_reportingData.ready
+    ) {
+      return null;
+    }
+
+
+    let formalFeedback =
+      LH_reportingData.feedback ||
+      [];
+
+    let traffic =
+      LH_reportingData.traffic ||
+      [];
+
+
+    if (
+      typeof LH_filterByDate ===
+      "function"
+    ) {
+
+      formalFeedback =
+        LH_filterByDate(
+          formalFeedback,
+          "Feedback Date"
+        );
+
+      traffic =
+        LH_filterByDate(
+          traffic,
+          "Activity Date"
+        );
+    }
+
+
+    return {
+      formalFeedback,
+      traffic
+    };
+  }
+
+
+  // --------------------------------------------------------
+  // Render combined feedback on dashboard
+  // --------------------------------------------------------
+
+  function PF_renderMergedFeedback() {
+
+    const data =
+      PF_getCurrentFeedbackData();
+
+    if (!data) {
+      return;
+    }
+
+
+    const merged =
+      PF_mergeBuyerFeedback(
+        data.formalFeedback,
+        data.traffic
+      );
+
+
+    // Use the dashboard's original feedback renderer
+    // so the existing design stays intact.
+
+    if (
+      typeof LH_originalUpdateFeedbackList ===
+      "function"
+    ) {
+
+      LH_originalUpdateFeedbackList(
+        merged
+      );
+
+    } else if (
+      typeof updateFeedbackList ===
+      "function"
+    ) {
+
+      updateFeedbackList(
+        merged
+      );
+    }
+
+
+    // ------------------------------------------
+    // Correct Buyer Conversations KPI
+    // ------------------------------------------
+
+    const metrics =
+      document.querySelectorAll(
+        ".metric"
+      );
+
+    if (metrics[3]) {
+
+      const value =
+        metrics[3]
+          .querySelector(
+            ".metric-value"
+          );
+
+      const sub =
+        metrics[3]
+          .querySelector(
+            ".metric-sub"
+          );
+
+
+      if (value) {
+        value.textContent =
+          merged.length;
+      }
+
+
+      if (sub) {
+
+        const formalCount =
+          data.formalFeedback.length;
+
+        const showingCount =
+          data.traffic.filter(
+            row =>
+              PF_hasText(
+                row["Notes"]
+              )
+          ).length;
+
+
+        sub.textContent =
+          formalCount +
+          " formal · " +
+          showingCount +
+          " showing note" +
+          (
+            showingCount === 1
+              ? ""
+              : "s"
+          );
+      }
+    }
+  }
+
+
+  // --------------------------------------------------------
+  // Re-render after traffic/live data updates
+  // --------------------------------------------------------
+
+  if (
+    typeof updateTraffic ===
+    "function"
+  ) {
+
+    const PF_originalUpdateTraffic =
+      updateTraffic;
+
+    updateTraffic =
+      function(traffic) {
+
+        PF_originalUpdateTraffic(
+          traffic
+        );
+
+        window.setTimeout(
+          PF_renderMergedFeedback,
+          0
+        );
+      };
+  }
+
+
+  // --------------------------------------------------------
+  // Re-render after reporting period changes
+  // --------------------------------------------------------
+
+  if (
+    typeof LH_renderSelectedPeriod ===
+    "function"
+  ) {
+
+    const PF_originalPeriodRender =
+      LH_renderSelectedPeriod;
+
+    LH_renderSelectedPeriod =
+      function() {
+
+        PF_originalPeriodRender();
+
+        window.setTimeout(
+          PF_renderMergedFeedback,
+          0
+        );
+      };
+  }
+
+
+  // Initial render after live data has had time to load.
+
+  window.setTimeout(
+    PF_renderMergedFeedback,
+    750
+  );
+
+})();
