@@ -1059,3 +1059,354 @@
   );
 
 })();
+// ========================================================
+// ACTION ITEMS + TEMPORARILY HIDE MARKETING
+// ========================================================
+
+(() => {
+
+  const safeText = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+
+  // --------------------------------------------------------
+  // HIDE MARKETING FOR NOW
+  // --------------------------------------------------------
+
+  function hideMarketingSection() {
+
+    // Remove Marketing from top/jump navigation.
+    document
+      .querySelectorAll('a[href="#marketing"]')
+      .forEach(link => link.remove());
+
+
+    // Remove the actual Marketing section.
+    const marketing =
+      document.getElementById(
+        "marketing"
+      );
+
+    if (marketing) {
+      marketing.remove();
+    }
+  }
+
+
+  // --------------------------------------------------------
+  // ACTION ITEMS
+  //
+  // Shows:
+  // Action Item
+  // FAM Owner
+  // GreenCity Owner
+  // Due
+  // Priority
+  // --------------------------------------------------------
+
+  function renderActionItemsWithGreenCity(
+    actions
+  ) {
+
+    const list =
+      document.querySelector(
+        ".action-list"
+      );
+
+    if (!list) {
+      return;
+    }
+
+
+    const rows =
+      Array.isArray(actions)
+        ? actions
+        : [];
+
+
+    if (!rows.length) {
+
+      list.innerHTML = `
+        <div style="
+          padding:24px;
+          color:var(--muted);
+          font-size:13px;
+        ">
+          No action items logged.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    const grid =
+      "minmax(260px,2.2fr) minmax(115px,.8fr) minmax(140px,.95fr) minmax(105px,.7fr) minmax(85px,.55fr)";
+
+
+    list.innerHTML = `
+
+      <div
+        class="action-row"
+        style="
+          grid-template-columns:${grid};
+          background:#f5f1e9;
+          border-bottom:1px solid var(--line);
+          padding-top:10px;
+          padding-bottom:10px;
+        "
+      >
+
+        <span style="
+          font-size:9px;
+          letter-spacing:.12em;
+          text-transform:uppercase;
+          color:var(--muted);
+        ">
+          Action Item
+        </span>
+
+
+        <span style="
+          font-size:9px;
+          letter-spacing:.12em;
+          text-transform:uppercase;
+          color:var(--muted);
+        ">
+          FAM Owner
+        </span>
+
+
+        <span style="
+          font-size:9px;
+          letter-spacing:.12em;
+          text-transform:uppercase;
+          color:var(--bronze);
+        ">
+          GreenCity Owner
+        </span>
+
+
+        <span style="
+          font-size:9px;
+          letter-spacing:.12em;
+          text-transform:uppercase;
+          color:var(--muted);
+        ">
+          Due
+        </span>
+
+
+        <span style="
+          font-size:9px;
+          letter-spacing:.12em;
+          text-transform:uppercase;
+          color:var(--muted);
+        ">
+          Priority
+        </span>
+
+      </div>
+
+
+      ${rows.map(action => {
+
+        const priority =
+          String(
+            action["Priority"] ||
+            "Medium"
+          ).toLowerCase();
+
+
+        const priorityClass =
+          (
+            priority === "high" ||
+            priority === "urgent"
+          )
+            ? "high"
+            : "medium";
+
+
+        const context =
+          [
+            action["Category"],
+            action[
+              "Unit ID or Location"
+            ]
+          ]
+          .filter(Boolean)
+          .join(" · ");
+
+
+        return `
+
+          <div
+            class="action-row"
+            style="
+              grid-template-columns:${grid};
+            "
+          >
+
+            <strong>
+
+              ${safeText(
+                action["Description"] ||
+                action["Action ID"] ||
+                "Action"
+              )}
+
+              ${
+                context
+                  ? `
+                    <small style="
+                      display:block;
+                      margin-top:4px;
+                      color:var(--muted);
+                      font-size:10px;
+                      font-weight:400;
+                    ">
+                      ${safeText(context)}
+                    </small>
+                  `
+                  : ""
+              }
+
+            </strong>
+
+
+            <span>
+              ${safeText(
+                action["Owner"] ||
+                "—"
+              )}
+            </span>
+
+
+            <span style="
+              font-weight:500;
+              color:var(--ink);
+            ">
+              ${safeText(
+                action[
+                  "Green City Owner"
+                ] ||
+                "—"
+              )}
+            </span>
+
+
+            <span>
+              ${
+                action["Due Date"]
+                  ? safeText(
+                      action["Due Date"]
+                    )
+                  : "—"
+              }
+            </span>
+
+
+            <span
+              class="
+                priority
+                ${priorityClass}
+              "
+            >
+              ${safeText(
+                action["Priority"] ||
+                "Medium"
+              )}
+            </span>
+
+          </div>
+        `;
+
+      }).join("")}
+
+    `;
+  }
+
+
+  // --------------------------------------------------------
+  // REPLACE EXISTING ACTION ITEM RENDERER
+  // --------------------------------------------------------
+
+  if (
+    typeof updateActionsList ===
+    "function"
+  ) {
+
+    updateActionsList =
+      function(actions) {
+
+        renderActionItemsWithGreenCity(
+          actions
+        );
+
+      };
+  }
+
+
+  // --------------------------------------------------------
+  // ALSO RENDER FROM ALREADY-LOADED DATA
+  // --------------------------------------------------------
+
+  function refreshExistingActions() {
+
+    if (
+      typeof LH_reportingData !==
+        "undefined" &&
+      LH_reportingData &&
+      LH_reportingData.ready &&
+      Array.isArray(
+        LH_reportingData.actions
+      )
+    ) {
+
+      renderActionItemsWithGreenCity(
+        LH_reportingData.actions
+      );
+
+    }
+
+  }
+
+
+  function initializeCurrentChanges() {
+
+    hideMarketingSection();
+
+    refreshExistingActions();
+
+
+    // One more pass after live data finishes loading.
+    window.setTimeout(
+      refreshExistingActions,
+      1000
+    );
+
+  }
+
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeCurrentChanges
+    );
+
+  } else {
+
+    initializeCurrentChanges();
+
+  }
+
+})();
