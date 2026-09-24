@@ -7,7 +7,9 @@ const TAB_GIDS = {
   leads: "827444638",
   feedback: "776649459",
   actions: "964868991",
-  marketing: "17998325"
+  marketing: "17998325",
+  budget: "1146982907",
+  competitors: "1788712917"
 };
 
 module.exports = async function handler(req, res) {

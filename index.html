@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root {
   --navy: #041820;
@@ -232,16 +234,22 @@ a { color: inherit; }
   flex-wrap: wrap;
   margin-top: 14px;
 }
-.quick-periods button {
+.quick-periods button,
+.quick-periods a {
   border: 1px solid var(--line);
   background: transparent;
   padding: 8px 11px;
   color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 11px;
   cursor: pointer;
+  text-decoration: none;
   transition: border-color 0.15s, color 0.15s;
 }
-.quick-periods button:hover {
+.quick-periods button:hover,
+.quick-periods a:hover {
   border-color: var(--bronze);
   color: var(--ink);
 }
@@ -1056,6 +1064,7 @@ footer .ft-bottom {
   .section { padding-top: 56px; }
 }
 </style>
+<link rel="stylesheet" href="/modern-dashboard.css">
 </head>
 <body>
 
@@ -1072,10 +1081,10 @@ footer .ft-bottom {
       <a href="#overview" class="active">Overview</a>
       <a href="#map">Map</a>
       <a href="#inventory">Inventory</a>
-      <a href="#traffic">Traffic</a>
-      <a href="#feedback">Feedback</a>
+      <a href="#traffic">Activity</a>
       <a href="#actions">Actions</a>
-          </nav>
+      <a href="#marketing">Marketing</a>
+    </nav>
     <div class="synced">Last synced · Aug 7, 2026 · 10:42 AM</div>
   </div>
 </header>
@@ -1086,7 +1095,7 @@ footer .ft-bottom {
     <div class="hero-row">
       <div>
         <div class="eyebrow">Executive Briefing</div>
-        <h1>Lowell Heights,<br><em>at a glance.</em></h1>
+        <h1>Lowell Heights.</h1>
       </div>
       <div class="hero-meta">
         <strong>Community</strong><br>
@@ -1114,14 +1123,46 @@ footer .ft-bottom {
               </div>
             </div>
             <div class="quick-periods">
-              <button data-range="prev">Previous Tue–Tue</button>
-              <button data-range="30">30 Days</button>
-              <button data-range="90">90 Days</button>
+              <button type="button" data-range="prev">Last 7 Days · Wed–Wed</button>
+              <button type="button" data-range="30">Last 30 Days</button>
             </div>
           </div>
         </div>
       </div>
-      <div class="period-right">Defaults to the most recent completed Tuesday–Tuesday period.</div>
+    </div>
+  </section>
+
+  <!-- Budget summary — live from Marketing Budget in the master sheet -->
+  <section id="budget" class="shell budget-summary" aria-labelledby="budgetTitle">
+    <div class="budget-heading">
+      <div>
+        <div class="eyebrow">Budget</div>
+        <h2 id="budgetTitle">Budget overview</h2>
+      </div>
+    </div>
+    <div class="budget-grid">
+      <article class="budget-card budget-card-total">
+        <span>Total budget</span>
+        <strong id="budgetTotal">$0</strong>
+      </article>
+      <article class="budget-card">
+        <span>Amount spent</span>
+        <strong id="budgetSpent">$0</strong>
+      </article>
+      <article class="budget-card">
+        <span>Remaining</span>
+        <strong id="budgetRemaining">$0</strong>
+      </article>
+      <div class="budget-progress" aria-label="Budget spent">
+        <span id="budgetProgressBar"></span>
+      </div>
+    </div>
+    <div class="budget-categories" aria-labelledby="budgetCategoriesTitle">
+      <div class="budget-categories-heading">
+        <h3 id="budgetCategoriesTitle">Spend by category</h3>
+        <span>Spent / approved</span>
+      </div>
+      <div id="budgetBreakdown" class="budget-category-grid" aria-live="polite"></div>
     </div>
   </section>
 
@@ -1171,10 +1212,10 @@ footer .ft-bottom {
         </div>
       </div>
       <div class="metric">
-        <div class="metric-label">Decisions</div>
+        <div class="metric-label">Active Marketing</div>
         <div>
-          <div class="metric-value">2</div>
-          <div class="metric-sub">Pricing · Listing</div>
+          <div class="metric-value">0</div>
+          <div class="metric-sub">Active or in progress</div>
         </div>
       </div>
     </div>
@@ -1185,10 +1226,10 @@ footer .ft-bottom {
   <nav class="shell jumpnav">
     <a href="#map"><div class="jump-title">Community Map</div></a>
     <a href="#inventory"><div class="jump-title">Inventory</div></a>
-    <a href="#traffic"><div class="jump-title">Traffic</div></a>
-    <a href="#feedback"><div class="jump-title">Buyer Feedback</div></a>
+    <a href="#traffic"><div class="jump-title">Traffic + Leads</div></a>
+    <a href="#competition"><div class="jump-title">Competition</div></a>
     <a href="#actions"><div class="jump-title">Action Items</div></a>
-    <a href="#marketing"><div class="jump-title">Marketing</div></a>
+    <a href="#marketing"><div class="jump-title">Marketing Calendar</div></a>
   </nav>
 
   <!-- Map — site plan uses Map X / Map Y % from the Green City sheet -->
@@ -1307,32 +1348,59 @@ footer .ft-bottom {
       </div>
     </div>
     <div class="card" id="trafficDetail" style="margin-top:16px;display:none"></div>
+    <div class="activity-grid">
+      <article id="feedback" class="activity-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">Voice of buyer</span>
+            <h3>Feedback + level of interest</h3>
+          </div>
+          <span class="panel-count" id="feedbackCount">0 notes</span>
+        </div>
+        <div class="card" id="feedbackList">
+          <div class="empty-state">No buyer feedback in this reporting period.</div>
+        </div>
+      </article>
+      <article id="leads" class="activity-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">Pipeline</span>
+            <h3>Leads</h3>
+          </div>
+          <span class="panel-count" id="leadCount">0 leads</span>
+        </div>
+        <div class="lead-list" id="leadList">
+          <div class="empty-state">No leads in this reporting period.</div>
+        </div>
+      </article>
+    </div>
   </section>
 
-  <!-- Feedback -->
-  <section id="feedback" class="section shell">
+  <!-- Competition -->
+  <section id="competition" class="section shell">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Voice of Buyer</div>
-        <h2>Buyer Feedback</h2>
+        <div class="eyebrow">Market Position</div>
+        <h2>Competition</h2>
       </div>
     </div>
-    <div class="card" id="feedbackList">
-      <div class="quote">
-        <div class="quote-type"><span class="sentiment positive">Positive</span> · A3</div>
-        <q>Buyers loved the kitchen, natural light and overall finish quality.</q>
-        <div class="quote-date">Aug 6</div>
+    <div class="competition-map-panel">
+      <div class="competition-map-heading">
+        <div>
+          <h3>Communities map</h3>
+          <p>Lowell Heights and nearby developments · distances are straight line</p>
+        </div>
+        <button type="button" id="competitionFitMap" class="competition-fit" aria-label="Show all mapped communities">Show all</button>
       </div>
-      <div class="quote">
-        <div class="quote-type"><span class="sentiment concern">Concern</span> · C3</div>
-        <q>Parking felt tight for two larger vehicles and was the primary hesitation.</q>
-        <div class="quote-date">Aug 5</div>
+      <div id="competitionMap" class="competition-map" role="region" aria-label="Interactive map of Lowell Heights and competing communities"></div>
+      <div class="competition-map-footer">
+        <span><i class="competition-legend-home" aria-hidden="true">⌂</i> Lowell Heights</span>
+        <span><i class="competition-legend-dot" aria-hidden="true"></i> Competition</span>
+        <span id="competitionMapCount" aria-live="polite">Loading communities…</span>
       </div>
-      <div class="quote">
-        <div class="quote-type"><span class="sentiment mixed">Neutral</span> · B2</div>
-        <q>Strong response to the floorplan; pricing was the main point of discussion.</q>
-        <div class="quote-date">Aug 4</div>
-      </div>
+    </div>
+    <div class="competition-grid" id="competitionGrid">
+      <div class="empty-state">Loading competitive snapshots…</div>
     </div>
   </section>
 
@@ -1346,30 +1414,7 @@ footer .ft-bottom {
       <p>4 open · 1 high priority</p>
     </div>
     <div class="action-list">
-      <div class="action-row">
-        <strong>Replace damaged model signage</strong>
-        <span>Brook</span>
-        <span>Due Aug 9</span>
-        <span class="priority high">High</span>
-      </div>
-      <div class="action-row">
-        <strong>Update model home photography</strong>
-        <span>Marketing</span>
-        <span>Due Aug 12</span>
-        <span class="priority medium">Medium</span>
-      </div>
-      <div class="action-row">
-        <strong>Confirm next inventory release</strong>
-        <span>Jill</span>
-        <span>Due Aug 13</span>
-        <span class="priority medium">Medium</span>
-      </div>
-      <div class="action-row">
-        <strong>Review broker event follow-up</strong>
-        <span>FAM</span>
-        <span>Due Aug 14</span>
-        <span class="priority medium">Medium</span>
-      </div>
+      <div class="empty-state">Loading action items…</div>
     </div>
   </section>
 
@@ -1383,23 +1428,31 @@ footer .ft-bottom {
       </div>
       <p>From Marketing Roadmap</p>
     </div>
-    <div class="property-list">
-      <div class="property-row">
-        <div class="property-name"><strong>Meta Listing Campaign</strong><span>Digital · Active</span></div>
-        <div><small>Impressions</small><strong>12,504</strong></div>
-        <div><small>Property Views</small><strong>241</strong></div>
-        <div><small>Status</small><strong>Active</strong></div>
+    <div class="marketing-priority" id="marketingPriority">
+      <div class="empty-state">Loading active marketing…</div>
+    </div>
+    <div class="calendar-card">
+      <div class="calendar-toolbar">
+        <button type="button" id="calendarPrev" aria-label="Previous month">‹</button>
+        <h3 id="calendarMonth">Marketing calendar</h3>
+        <button type="button" id="calendarNext" aria-label="Next month">›</button>
       </div>
-      <div class="property-row">
-        <div class="property-name"><strong>Broker Outreach</strong><span>Email · Complete</span></div>
-        <div><small>Recipients</small><strong>486</strong></div>
-        <div><small>Engagement</small><strong>—</strong></div>
-        <div><small>Status</small><strong>Complete</strong></div>
-      </div>
+      <div class="marketing-calendar" id="marketingCalendar"></div>
     </div>
   </section>
 
 </main>
+
+<div class="image-modal" id="actionImageModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="actionImageTitle">
+  <button type="button" class="image-modal-close" id="actionImageClose" aria-label="Close image">×</button>
+  <div class="image-modal-card">
+    <div class="image-modal-copy">
+      <span class="eyebrow">Action Item Photo</span>
+      <h3 id="actionImageTitle">Photo</h3>
+    </div>
+    <div class="image-modal-stage" id="actionImageStage"></div>
+  </div>
+</div>
 
 <footer>
   <div class="shell">
@@ -1424,7 +1477,7 @@ footer .ft-bottom {
 // Browser cannot hit Google/S3 directly (CORS). Order:
 // 1) /api/sheet + /api/lp on Vercel  2) jina.ai text proxy  3) embedded fallback
 const SHEET_PUB = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc8vL1cAkmtftqD_qWZiUIrBOzool2EmG-3LwDiQD_8-JtQZJ4kZOactTmSWCDUAxQMnNwlHf_991k/pub";
-const TAB_GIDS = { inventory: "1397988016", traffic: "696309813", leads: "827444638", feedback: "776649459", actions: "964868991", marketing: "17998325" };
+const TAB_GIDS = { inventory: "1397988016", traffic: "696309813", leads: "827444638", feedback: "776649459", actions: "964868991", marketing: "17998325", budget: "1146982907", competitors: "1788712917" };
 const LP_URL = "https://lp-data-syndication-production.s3.amazonaws.com/v1/7dcaf7ae-44ff-46d5-92e5-15e990b91eca/properties.json";
 
 const INVENTORY_FALLBACK = [{"id":"A1","status":"Model Home","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"2576","mls":"2509115","dom":"0:00:00","mapX":"21.55","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"496080:00:00","mapX":"25.98","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"30.4","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"34.83","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"A5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"39.19","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"A","completion":"Confirmed"},{"id":"B1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"50.26","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"54.75","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"59.05","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"62.83","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"67.06","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"B6","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$1,120,000.00","beds":"","baths":"","sqft":"","mls":"2509115","dom":"","mapX":"71.29","mapY":"18.52","floorPlan":"Large (2,576 sq ft)","building":"B","completion":"Confirmed"},{"id":"C1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"37.43","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"40.43","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"43.49","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"46.48","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C5","status":"Model Home","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"49.48","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"C6","status":"Reserved","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2461566","dom":"","mapX":"52.47","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"C","completion":"Confirmed"},{"id":"D1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"57.68","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"60.81","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"63.93","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"67.06","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"D5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"70.18","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"D","completion":"Confirmed"},{"id":"E1","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"75.13","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E2","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"77.73","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E3","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"80.27","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E4","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"82.81","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"E5","status":"Available","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"$850,000.00","beds":"","baths":"","sqft":"","mls":"2509133","dom":"","mapX":"85.35","mapY":"43.4","floorPlan":"Small (1,819 sq ft)","building":"E","completion":"Confirmed"},{"id":"F1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"41.15","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"44.27","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"47.4","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"50.52","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"F5","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"53.65","mapY":"55.32","floorPlan":"","building":"F","completion":"TBD"},{"id":"G1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"58.92","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"62.04","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"65.17","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"68.29","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"G5","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"71.42","mapY":"55.32","floorPlan":"","building":"G","completion":"TBD"},{"id":"H1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"76.37","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"H2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"79.43","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"H3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"82.49","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"H4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"85.48","mapY":"55.32","floorPlan":"","building":"H","completion":"TBD"},{"id":"I1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"46.35","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"49.41","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"52.47","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"55.53","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"I5","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"58.66","mapY":"82.18","floorPlan":"","building":"I","completion":"TBD"},{"id":"J1","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"64.13","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"},{"id":"J2","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"67.19","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"},{"id":"J3","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"70.25","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"},{"id":"J4","status":"","address":"5814 Lowell Larimer Rd, Everett WA 98208","price":"","beds":"","baths":"","sqft":"","mls":"","dom":"","mapX":"73.31","mapY":"82.18","floorPlan":"","building":"J","completion":"TBD"}];
@@ -1572,27 +1625,44 @@ function pctToLatLng(mapX, mapY) {
 
 function parseCSV(text) {
   if (!text) return [];
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headers = parseCSVLine(lines[0]);
-  return lines.slice(1).map(line => {
-    const vals = parseCSVLine(line);
+  const rows = [];
+  let row = [], value = "", inQuotes = false;
+  const source = String(text).replace(/^\uFEFF/, "");
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i];
+    if (char === '"') {
+      if (inQuotes && source[i + 1] === '"') {
+        value += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+    if (char === "," && !inQuotes) {
+      row.push(value);
+      value = "";
+      continue;
+    }
+    if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && source[i + 1] === "\n") i += 1;
+      row.push(value);
+      if (row.some(cell => cell !== "")) rows.push(row);
+      row = [];
+      value = "";
+      continue;
+    }
+    value += char;
+  }
+  row.push(value);
+  if (row.some(cell => cell !== "")) rows.push(row);
+  if (rows.length < 2) return [];
+  const headers = rows[0];
+  return rows.slice(1).map(vals => {
     const obj = {};
     headers.forEach((h, i) => { obj[h.trim()] = (vals[i] || "").trim(); });
     return obj;
   }).filter(r => Object.values(r).some(v => v));
-}
-function parseCSVLine(line) {
-  const result = [];
-  let cur = "", inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; continue; }
-    if (c === "," && !inQ) { result.push(cur); cur = ""; continue; }
-    cur += c;
-  }
-  result.push(cur);
-  return result;
 }
 
 function formatMoney(n) {
@@ -1807,7 +1877,7 @@ function updateKPIs(inventory, traffic, leads, feedback, actions, lpByUnit) {
   const sold = statusCounts["Sold"] || 0;
   const openActions = (actions || []).filter(a => {
     const st = (a["Status"] || "").toLowerCase();
-    return st && st !== "complete" && st !== "completed" && st !== "done";
+    return st && st !== "closed" && st !== "complete" && st !== "completed" && st !== "done";
   }).length;
   const mlsLive = lpByUnit ? Object.keys(lpByUnit).length : 0;
 
@@ -2108,6 +2178,21 @@ document.getElementById("drawerClose")?.addEventListener("click", () => {
 const SITE_PLAN_IMAGE_URL = "Community-map.png";
 const SITE_PLAN_FALLBACKS = ["Community-map.png", "community-map.png", "community-map.jpg"];
 
+// Portal-only pin locations centered over each townhome roof bay.
+// AppSheet's XY values are preserved in the sheet for its own map view.
+const SITE_PLAN_PIN_COORDS = {
+  A1:[24.0,18.6], A2:[28.5,18.6], A3:[33.0,18.6], A4:[37.5,18.6], A5:[42.1,18.6],
+  B1:[47.7,18.6], B2:[52.1,18.6], B3:[56.5,18.6], B4:[60.9,18.6], B5:[65.4,18.6], B6:[69.9,18.6],
+  C6:[37.3,44.0], C5:[40.3,44.0], C4:[43.2,44.0], C3:[46.2,44.0], C2:[49.2,44.0], C1:[52.1,44.0],
+  D5:[56.6,44.0], D4:[59.6,44.0], D3:[62.6,44.0], D2:[65.5,44.0], D1:[68.5,44.0],
+  E5:[73.0,44.0], E4:[76.0,44.0], E3:[78.9,44.0], E2:[81.9,44.0], E1:[84.8,44.0],
+  F1:[41.1,57.5], F2:[44.1,57.5], F3:[47.2,57.5], F4:[50.2,57.5], F5:[53.2,57.5],
+  G1:[56.4,57.5], G2:[59.5,57.5], G3:[62.6,57.5], G4:[65.6,57.5], G5:[68.7,57.5],
+  H1:[74.0,57.5], H2:[77.0,57.5], H3:[80.0,57.5], H4:[83.0,57.5],
+  I5:[45.9,82.2], I4:[48.9,82.2], I3:[51.9,82.2], I2:[55.0,82.2], I1:[57.9,82.2],
+  J4:[62.6,82.2], J3:[66.1,82.2], J2:[69.7,82.2], J1:[73.3,82.2]
+};
+
 function rebuildMapMarkers() {
   const layer = document.getElementById("sitePlanPins");
   if (!layer) return;
@@ -2129,8 +2214,9 @@ function rebuildMapMarkers() {
 
   Object.keys(unitData).forEach(id => {
     const d = unitData[id];
-    const x = parseFloat(d.mapX);
-    const y = parseFloat(d.mapY);
+    const calibrated = SITE_PLAN_PIN_COORDS[id];
+    const x = calibrated ? calibrated[0] : parseFloat(d.mapX);
+    const y = calibrated ? calibrated[1] : parseFloat(d.mapY);
     if (isNaN(x) || isNaN(y)) return;
 
     const statusClass = (d.status || "available").toLowerCase().replace(/\s+/g, "-");
@@ -2157,7 +2243,7 @@ loadLiveData();
 const toggle = document.getElementById("periodToggle");
 const pop = document.getElementById("periodPop");
 toggle.addEventListener("click", e => {
-  if (e.target.closest("input,button")) return;
+  if (e.target.closest("input,button,a")) return;
   pop.classList.toggle("open");
 });
 document.addEventListener("click", e => {
@@ -2872,6 +2958,10 @@ applyRange = function(
 </script>
 
 <script src="/portal-fixes.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/competition-map.js"></script>
+<script src="/modern-dashboard.js"></script>
 
 </body>
 </html>

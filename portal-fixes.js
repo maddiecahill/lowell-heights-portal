@@ -1060,7 +1060,7 @@
 
 })();
 // ========================================================
-// ACTION ITEMS + TEMPORARILY HIDE MARKETING
+// ACTION ITEMS
 // ========================================================
 
 (() => {
@@ -1072,30 +1072,6 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
-
-
-  // --------------------------------------------------------
-  // HIDE MARKETING FOR NOW
-  // --------------------------------------------------------
-
-  function hideMarketingSection() {
-
-    // Remove Marketing from top/jump navigation.
-    document
-      .querySelectorAll('a[href="#marketing"]')
-      .forEach(link => link.remove());
-
-
-    // Remove the actual Marketing section.
-    const marketing =
-      document.getElementById(
-        "marketing"
-      );
-
-    if (marketing) {
-      marketing.remove();
-    }
-  }
 
 
   // --------------------------------------------------------
@@ -1112,6 +1088,16 @@
   function renderActionItemsWithGreenCity(
     actions
   ) {
+
+    if (
+      typeof window.LH_renderModernActions ===
+        "function"
+    ) {
+      window.LH_renderModernActions(
+        actions
+      );
+      return;
+    }
 
     const list =
       document.querySelector(
@@ -1378,8 +1364,6 @@
 
 
   function initializeCurrentChanges() {
-
-    hideMarketingSection();
 
     refreshExistingActions();
 
