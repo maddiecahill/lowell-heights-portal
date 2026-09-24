@@ -317,6 +317,7 @@
 
     if (!rows.length) {
       card.innerHTML = '<div class="empty-state">No buyer feedback in this reporting period.</div>';
+      updateFeedbackSlider();
       return;
     }
 
@@ -336,6 +337,38 @@
           <div class="quote-date">${esc(dateLabel(row["Feedback Date"]))}${meta ? ` · ${esc(meta)}` : ""}</div>
         </div>`;
     }).join("");
+    card.scrollLeft = 0;
+    updateFeedbackSlider();
+  }
+
+  function updateFeedbackSlider() {
+    const track = document.getElementById("feedbackList");
+    const cards = [...(track?.querySelectorAll(".quote") || [])];
+    const position = document.getElementById("feedbackPosition");
+    const previous = document.getElementById("feedbackPrev");
+    const next = document.getElementById("feedbackNext");
+    const step = cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : 0;
+    const current = step ? Math.min(cards.length - 1, Math.max(0, Math.round(track.scrollLeft / step))) : 0;
+    if (position) position.textContent = cards.length ? `${current + 1} of ${cards.length}` : "0 of 0";
+    if (previous) previous.disabled = current === 0;
+    if (next) next.disabled = current >= cards.length - 1;
+  }
+
+  function setupFeedbackSlider() {
+    const track = document.getElementById("feedbackList");
+    if (!track) return;
+    function move(direction) {
+      const cards = [...track.querySelectorAll(".quote")];
+      if (!cards.length) return;
+      const step = cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : 0;
+      const current = step ? Math.round(track.scrollLeft / step) : 0;
+      const target = Math.min(cards.length - 1, Math.max(0, current + direction));
+      track.scrollTo({ left: cards[target].offsetLeft - cards[0].offsetLeft, behavior: "smooth" });
+    }
+    document.getElementById("feedbackPrev")?.addEventListener("click", () => move(-1));
+    document.getElementById("feedbackNext")?.addEventListener("click", () => move(1));
+    track.addEventListener("scroll", updateFeedbackSlider, { passive: true });
+    window.addEventListener("resize", updateFeedbackSlider);
   }
 
   function renderLeads(rows) {
@@ -699,6 +732,7 @@
     setupPeriodControls();
     setupCalendar();
     setupCompetitionSlider();
+    setupFeedbackSlider();
     setupModal();
     loadSupplementalData();
     renderCalendar();
