@@ -227,18 +227,20 @@
       const source = externalUrl(row["Source URL"]);
       const destination = source || (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : "");
       const photo = competitionPhoto(row);
+      const displayName = String(row["Community Name"] || "").replace(/\s*\(No Community Name, only 2 homes\)$/i, "");
       return `
         <article class="competition-card" data-competition-index="${index}">
           <div class="competition-photo${photo ? "" : " photo-unavailable"}">
-            ${photo ? `<img src="${esc(photo[0])}" alt="${esc(row["Community Name"])} community" loading="lazy">` : ""}
-            <span class="competition-photo-fallback">Photo coming soon</span>
+            ${photo ? `<img src="${esc(photo[0])}" alt="${esc(displayName)} community" loading="lazy">` : ""}
+            <span class="competition-photo-fallback">Photo unavailable</span>
             ${photo?.[1] ? `<a class="competition-photo-credit" href="${esc(photo[1])}" target="_blank" rel="noopener noreferrer">${esc(photo[2])} ↗</a>` : ""}
           </div>
           <div class="competition-card-body">
           <div class="competition-head">
             <div>
-              <h3>${esc(row["Community Name"])}</h3>
+              <h3>${esc(displayName)}</h3>
               <p>${esc(row["Builder"] || "Builder not entered")}${hasText(row["City"]) ? ` · ${esc(row["City"])}` : ""}</p>
+              ${displayName !== row["Community Name"] ? '<p class="competition-name-note">Two homes · no community name listed</p>' : ""}
             </div>
             <span class="panel-count">Updated ${esc(dateLabel(row["Snapshot Date"]))}</span>
           </div>
