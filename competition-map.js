@@ -144,11 +144,11 @@
     if (!map && window.L) {
       renderer = "leaflet";
       map = window.L.map(element, { scrollWheelZoom: false }).setView([LOWELL.lat, LOWELL.lng], 11);
-      window.L.tileLayer("https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png", {
-        maxZoom: 19, attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+      window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
-      const homeIcon = window.L.divIcon({ className: "competition-leaflet-icon", html: markerElement("home", "Lowell Heights").outerHTML, iconSize: [38, 38], iconAnchor: [19, 19] });
-      lowellMarker = window.L.marker([LOWELL.lat, LOWELL.lng], { icon: homeIcon }).bindPopup(homePopup).addTo(map);
+      const homeIcon = window.L.divIcon({ className: "competition-leaflet-icon competition-home-marker", html: '<img src="/fam-pin-logo.png" alt="">', iconSize: [38, 38], iconAnchor: [19, 19] });
+      lowellMarker = window.L.marker([LOWELL.lat, LOWELL.lng], { icon: homeIcon, title: "Lowell Heights" }).bindPopup(homePopup).addTo(map);
     }
     if (!map) {
       element.innerHTML = '<p class="competition-map-error">Map tiles are unavailable. Use the listing and location links below.</p>';
@@ -189,8 +189,8 @@
         <a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${link.label} ↗</a></div>`;
       let marker;
       if (renderer === "leaflet") {
-        const icon = window.L.divIcon({ className: "competition-leaflet-icon", html: markerElement("competitor", `Select ${row["Community Name"]}`).outerHTML, iconSize: [32, 32], iconAnchor: [16, 16] });
-        marker = window.L.marker([point.lat, point.lng], { icon }).bindPopup(popup).addTo(map);
+        const icon = window.L.divIcon({ className: "competition-leaflet-icon competition-dot-marker", iconSize: [32, 32], iconAnchor: [16, 16] });
+        marker = window.L.marker([point.lat, point.lng], { icon, title: `Select ${row["Community Name"]}` }).bindPopup(popup).addTo(map);
         marker.on("click", () => markSelected(index));
       } else {
         marker = new window.maplibregl.Marker({ element: markerElement("competitor", `Select ${row["Community Name"]}`) })

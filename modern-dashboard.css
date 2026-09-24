@@ -775,7 +775,7 @@ main {
 .maplibregl-popup-content,
 .leaflet-popup-content-wrapper { border-radius: 18px; padding: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.18); }
 .leaflet-popup-content { margin: 0; }
-.competition-leaflet-icon { background: transparent; border: 0; }
+.competition-map .leaflet-tile-pane { filter: grayscale(1) brightness(1.08) contrast(.85); }
 .competition-popup { min-width: 190px; display: grid; gap: 5px; color: #2e454c; font: 11px/1.4 'Work Sans', sans-serif; }
 .competition-popup strong { color: var(--navy); font: 600 20px/1.1 'Cormorant Garamond', Georgia, serif; }
 .competition-popup-distance { color: var(--bronze-deep); font-weight: 600; }
