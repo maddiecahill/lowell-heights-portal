@@ -71,9 +71,11 @@
     };
   }
 
-  function markSelected(index) {
+  function markSelected(index, reveal = false) {
     document.querySelectorAll(".competition-card").forEach(card => {
-      card.classList.toggle("competition-selected", card.dataset.competitionIndex === String(index));
+      const selected = card.dataset.competitionIndex === String(index);
+      card.classList.toggle("competition-selected", selected);
+      if (selected && reveal) card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     });
   }
 
@@ -191,13 +193,13 @@
       if (renderer === "leaflet") {
         const icon = window.L.divIcon({ className: "competition-leaflet-icon competition-dot-marker", iconSize: [32, 32], iconAnchor: [16, 16] });
         marker = window.L.marker([point.lat, point.lng], { icon, title: `Select ${row["Community Name"]}` }).bindPopup(popup).addTo(map);
-        marker.on("click", () => markSelected(index));
+        marker.on("click", () => markSelected(index, true));
       } else {
         marker = new window.maplibregl.Marker({ element: markerElement("competitor", `Select ${row["Community Name"]}`) })
           .setLngLat([point.lng, point.lat])
           .setPopup(new window.maplibregl.Popup({ offset: 18, maxWidth: "290px" }).setHTML(popup))
           .addTo(map);
-        marker.getElement().addEventListener("click", () => markSelected(index));
+        marker.getElement().addEventListener("click", () => markSelected(index, true));
       }
       markers.set(index, marker);
       if (button) button.disabled = false;

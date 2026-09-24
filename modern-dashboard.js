@@ -8,6 +8,19 @@
     "ac-e4bb6537.photo link.014308.jpg": "/action-photos/gap-between-fence-and-wall.jpg",
     "ac-3697d845.photo link.215152.jpg": "/action-photos/roof-update.jpg"
   };
+  // Photos are from the named community's builder page or a matching property listing.
+  // A Photo URL in the live sheet overrides these selections.
+  const COMPETITION_PHOTOS = {
+    "greenview heights": ["https://b3630071.assetcdn.net/2.0/3630071/wp-content/uploads/2026/03/03_CH-Greenview-Heights-EN-Dusk-Rev_TH-Bldg-9_CS-03-1-768x384.jpg", "https://www.connerhomes.com/project/greenview-heights/", "Conner Homes rendering"],
+    "tambark 15": ["https://wpadmin.msrcommunities.com/wp-content/uploads/2025/10/kitchen-3.webp", "https://www.msrcommunities.com/property/tambark15", "MSR Communities"],
+    "gordon homes - single family": ["https://listing-images.mainview.com/2549424/85b63b46f2c681bae555911d0d764964-960w.webp", "https://www.wicklundre.com/listing/5577537/2223-124th-St-Se-St-SE-Everett-WA-98208", "Property listing"],
+    "ambleside - single family": ["https://www.kbhome.com/globalassets/images/community-images/washington/seattle-tacoma-area/silver-lakes-ambleside/hero/silver-lakes-ambleside-streetscene_web.jpg?preset=large", "https://www.kbhome.com/new-homes-seattle-tacoma-area/silver-lakes-ambleside", "KB Home rendering"],
+    "fern at lockwood": ["https://cdn.lennar.com/api/images/contentassets/47a692bd33b3476f8f62771d7d33e229/sea_1611_pic_fern_great_1of2_f2_base2.jpg?d=20260423T171114&w=738", "https://www.lennar.com/new-homes/washington/seattle/everett/lockwood-lane-townhomes/fern/65170510017", "Lennar"],
+    "snohomish gardens": ["https://cdn.lennar.com/api/images/contentassets/917206b1d3ba45f5b3dd6c314a7d6af6/sea_horizon_snohomishgardens_pic_gardenia_exterior_3of3.jpg?d=20260804T174943&w=738", "https://www.lennar.com/new-homes/washington/seattle/snohomish/snohomish-garden-townhomes", "Lennar"],
+    "moray village": ["https://www.westcotthomes.com/wp-content/uploads/2026/01/Moray-at-Maltby-Village-Kitchen-1.jpg", "https://www.westcotthomes.com/moray-at-maltby-village/", "Westcott Homes"],
+    "elmbrook": ["https://mainvuecdn.azureedge.net/prod/washington/images/tourmodels/elm/model-list/willow.webp?ver=7", "https://www.mainvuehomes.com/wa/elmbrook-display-homes", "MainVue Homes"],
+    "4 new construction homes in silver lake": ["https://m.cbhomes.com/p/277/2585943/c40b404ed960421/original.webp", "https://www.coldwellbankerhomes.com/wa/everett/1414-126th-street-se-b/pid_73867319/", "Property listing"]
+  };
   const BUDGET_CATEGORIES = [
     "Social Media",
     "Events",
@@ -145,6 +158,50 @@
     } catch (_) { return ""; }
   }
 
+  function competitionPhoto(row) {
+    const override = externalUrl(row["Photo URL"] || row["Image URL"]);
+    if (override.startsWith("https://")) {
+      return [override, externalUrl(row["Photo Source URL"]) || externalUrl(row["Source URL"]), "Community photo"];
+    }
+    return COMPETITION_PHOTOS[String(row["Community Name"] || "").trim().toLowerCase()];
+  }
+
+  function updateCompetitionSlider() {
+    const track = document.getElementById("competitionGrid");
+    const previous = document.getElementById("competitionPrev");
+    const next = document.getElementById("competitionNext");
+    const count = document.getElementById("competitionSlideCount");
+    if (!track || !previous || !next || !count) return;
+    const cards = [...track.querySelectorAll(".competition-card")];
+    const frame = track.getBoundingClientRect();
+    const start = cards.findIndex(card => card.getBoundingClientRect().right > frame.left + 8);
+    const visible = cards.filter(card => {
+      const edge = card.getBoundingClientRect();
+      return edge.left >= frame.left - 8 && edge.right <= frame.right + 8;
+    }).length;
+    count.textContent = cards.length ? `${Math.max(start, 0) + 1}–${Math.min(cards.length, Math.max(start, 0) + Math.max(visible, 1))} of ${cards.length}` : "";
+    previous.disabled = track.scrollLeft < 8;
+    next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 8;
+  }
+
+  function setupCompetitionSlider() {
+    const track = document.getElementById("competitionGrid");
+    if (!track) return;
+    const move = direction => {
+      const card = track.querySelector(".competition-card");
+      if (!card) return;
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      track.scrollBy({ left: direction * (card.getBoundingClientRect().width + gap), behavior: "smooth" });
+    };
+    document.getElementById("competitionPrev")?.addEventListener("click", () => move(-1));
+    document.getElementById("competitionNext")?.addEventListener("click", () => move(1));
+    track.addEventListener("scroll", updateCompetitionSlider, { passive: true });
+    track.addEventListener("error", event => {
+      if (event.target.matches(".competition-photo img")) event.target.closest(".competition-photo")?.classList.add("photo-unavailable");
+    }, true);
+    window.addEventListener("resize", updateCompetitionSlider);
+  }
+
   function renderCompetition(rows) {
     const container = document.getElementById("competitionGrid");
     if (!container) return;
@@ -157,6 +214,7 @@
 
     if (!clean.length) {
       container.innerHTML = '<div class="empty-state">No competitor snapshots have been entered yet.</div>';
+      updateCompetitionSlider();
       window.LowellCompetitionMap?.update([]);
       return;
     }
@@ -168,12 +226,21 @@
       const address = String(row["Community Address"] || "").trim();
       const source = externalUrl(row["Source URL"]);
       const destination = source || (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : "");
+      const photo = competitionPhoto(row);
+      const displayName = String(row["Community Name"] || "").replace(/\s*\(No Community Name, only 2 homes\)$/i, "");
       return `
         <article class="competition-card" data-competition-index="${index}">
+          <div class="competition-photo${photo ? "" : " photo-unavailable"}">
+            ${photo ? `<img src="${esc(photo[0])}" alt="${esc(displayName)} community" loading="lazy">` : ""}
+            <span class="competition-photo-fallback">Photo unavailable</span>
+            ${photo?.[1] ? `<a class="competition-photo-credit" href="${esc(photo[1])}" target="_blank" rel="noopener noreferrer">${esc(photo[2])} ↗</a>` : ""}
+          </div>
+          <div class="competition-card-body">
           <div class="competition-head">
             <div>
-              <h3>${esc(row["Community Name"])}</h3>
+              <h3>${esc(displayName)}</h3>
               <p>${esc(row["Builder"] || "Builder not entered")}${hasText(row["City"]) ? ` · ${esc(row["City"])}` : ""}</p>
+              ${displayName !== row["Community Name"] ? '<p class="competition-name-note">Two homes · no community name listed</p>' : ""}
             </div>
             <span class="panel-count">Updated ${esc(dateLabel(row["Snapshot Date"]))}</span>
           </div>
@@ -184,10 +251,13 @@
           </div>
           <div class="competition-details">
             <div class="competition-detail"><small>Floor plan + price point</small>${esc(priceRange(row))}</div>
-            <div class="competition-detail"><small>Weekly traffic</small>${esc(weeklyTraffic)}</div>
             <div class="competition-detail"><small>Current incentive</small>${esc(incentive)}</div>
-            <div class="competition-detail"><small>Comments / general notes</small>${esc(notes)}</div>
           </div>
+          <details class="competition-more">
+            <summary>Full snapshot</summary>
+            <div class="competition-detail"><small>Weekly traffic</small>${esc(weeklyTraffic)}</div>
+            <div class="competition-detail"><small>Comments / general notes</small>${esc(notes)}</div>
+          </details>
           <div class="competition-card-actions">
             <span class="competition-address">${address ? esc(address) : "Address needed to place on map"}</span>
             <div>
@@ -195,8 +265,11 @@
               ${destination ? `<a href="${esc(destination)}" target="_blank" rel="noopener noreferrer">${source ? "View listing ↗" : "View location ↗"}</a>` : ""}
             </div>
           </div>
+          </div>
         </article>`;
     }).join("");
+    container.scrollLeft = 0;
+    window.requestAnimationFrame(updateCompetitionSlider);
     window.LowellCompetitionMap?.update(clean);
   }
 
@@ -625,6 +698,7 @@
   function initialize() {
     setupPeriodControls();
     setupCalendar();
+    setupCompetitionSlider();
     setupModal();
     loadSupplementalData();
     renderCalendar();

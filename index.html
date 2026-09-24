@@ -1399,7 +1399,18 @@ footer .ft-bottom {
         <span id="competitionMapCount" aria-live="polite">Loading communities…</span>
       </div>
     </div>
-    <div class="competition-grid" id="competitionGrid">
+    <div class="competition-slider-heading">
+      <div>
+        <h3>Nearby communities</h3>
+        <p>Browse the competition, then select a card to find it on the map.</p>
+      </div>
+      <div class="competition-slider-controls">
+        <span id="competitionSlideCount" aria-live="polite"></span>
+        <button type="button" id="competitionPrev" aria-label="Previous communities" disabled>‹</button>
+        <button type="button" id="competitionNext" aria-label="Next communities" disabled>›</button>
+      </div>
+    </div>
+    <div class="competition-grid" id="competitionGrid" role="region" aria-label="Competition communities slider" tabindex="0">
       <div class="empty-state">Loading competitive snapshots…</div>
     </div>
   </section>
