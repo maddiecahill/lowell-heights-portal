@@ -781,21 +781,69 @@ main {
 .competition-popup-distance { color: var(--bronze-deep); font-weight: 600; }
 .competition-popup a { color: var(--navy); font-weight: 600; margin-top: 3px; }
 
+.competition-slider-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 24px 0 14px;
+  color: #fff;
+}
+
+.competition-slider-heading h3 {
+  font: 600 28px/1.1 'Cormorant Garamond', Georgia, serif;
+}
+
+.competition-slider-heading p { margin-top: 5px; color: #b6c5ca; font-size: 12px; }
+.competition-slider-controls { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+.competition-slider-controls span { margin-right: 7px; color: #b6c5ca; font-size: 11px; white-space: nowrap; }
+.competition-slider-controls button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255,255,255,.4);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 26px;
+  line-height: 1;
+}
+.competition-slider-controls button:hover:not(:disabled) { background: #c6a45e; color: var(--navy); }
+.competition-slider-controls button:disabled { opacity: .35; cursor: default; }
+
 .competition-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 28px) / 3);
   gap: 14px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: #b79657 transparent;
+  padding: 2px 2px 18px;
 }
 
 .competition-card {
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  scroll-snap-align: start;
   background: #ffffff;
   color: var(--ink);
   box-shadow: var(--shadow-soft);
 }
 
+.competition-photo { height: 190px; flex: 0 0 auto; position: relative; overflow: hidden; background: #dfe8e8; }
+.competition-photo img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.competition-photo-fallback { display: none; width: 100%; height: 100%; place-items: center; color: #67808b; font: 600 21px/1.1 'Cormorant Garamond', Georgia, serif; }
+.competition-photo.photo-unavailable img { display: none; }
+.competition-photo.photo-unavailable .competition-photo-fallback { display: grid; }
+.competition-photo-credit { position: absolute; right: 10px; bottom: 10px; padding: 5px 8px; background: rgba(14,38,49,.86); color: #fff; font-size: 10px; text-decoration: none; }
+.competition-photo-credit:hover { background: var(--navy); color: #fff; }
+.competition-card-body { display: flex; flex: 1; flex-direction: column; padding: 20px; }
+
 .competition-card.competition-selected { outline: 2px solid var(--bronze); outline-offset: -2px; }
 .competition-card-actions { display: flex; justify-content: space-between; align-items: end; gap: 12px; border-top: 1px solid var(--line); padding-top: 15px; margin-top: 18px; }
+.competition-card-body .competition-card-actions { margin-top: auto; }
 .competition-address { font-size: 11px; color: var(--muted); }
 .competition-card-actions > div { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: end; }
 .competition-card-actions a { font-size: 11px; font-weight: 600; color: var(--navy); white-space: nowrap; }
@@ -857,6 +905,11 @@ main {
   display: grid;
   gap: 12px;
 }
+
+.competition-more { margin: 14px 0 18px; color: #38515c; }
+.competition-more summary { width: fit-content; cursor: pointer; color: var(--bronze-deep); font-size: 11px; font-weight: 600; }
+.competition-more[open] .competition-detail { margin-top: 12px; }
+.competition-more .competition-detail:last-child { max-height: 190px; overflow: auto; }
 
 .competition-detail {
   color: #38515c;
@@ -1249,10 +1302,11 @@ footer {
   }
 
   .budget-grid,
-  .activity-grid,
-  .competition-grid {
+  .activity-grid {
     grid-template-columns: 1fr;
   }
+
+  .competition-grid { grid-auto-columns: calc((100% - 14px) / 2); }
 
   .budget-category-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1276,6 +1330,12 @@ footer {
   .competition-map { height: 390px; }
   .competition-map-heading, .competition-map-footer { padding: 15px; }
   .competition-map-footer span:last-child { margin-left: 0; width: 100%; }
+  .competition-slider-heading { align-items: flex-start; }
+  .competition-slider-heading p { max-width: 200px; }
+  .competition-slider-controls { align-self: end; }
+  .competition-slider-controls button { width: 34px; height: 34px; }
+  .competition-grid { grid-auto-columns: min(86%, 360px); }
+  .competition-card-body { padding: 18px; }
   .competition-card-actions { align-items: start; flex-direction: column; }
   .shell,
   .topbar-inner {
