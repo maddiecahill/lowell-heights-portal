@@ -610,6 +610,42 @@ main {
   white-space: nowrap;
 }
 
+.feedback-controls { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+.feedback-position { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.feedback-controls button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--navy);
+  font-size: 23px;
+  line-height: 1;
+  cursor: pointer;
+}
+.feedback-controls button:hover:not(:disabled) { background: #eef3f4; }
+.feedback-controls button:disabled { opacity: .35; cursor: default; }
+.activity-panel > .feedback-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: var(--bronze) transparent;
+  padding: 2px 2px 12px;
+}
+.feedback-track .quote {
+  flex: 0 0 calc(100% - 4px);
+  min-width: 0;
+  box-sizing: border-box;
+  scroll-snap-align: start;
+  border: 1px solid var(--line);
+  background: #f8faf9;
+  padding: 18px;
+}
+.feedback-track .quote:first-child { border-top: 1px solid var(--line); padding-top: 18px; }
+.feedback-track .quote q { display: block; max-height: 156px; overflow-y: auto; overflow-wrap: anywhere; }
+.feedback-track .empty-state { flex: 1 0 100%; }
+
 .quote {
   padding: 18px 0;
 }
@@ -1327,6 +1363,9 @@ footer {
 }
 
 @media (max-width: 640px) {
+  .activity-panel .panel-heading { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+  .feedback-controls { width: 100%; }
+  .feedback-position { margin-left: auto; }
   .competition-map { height: 390px; }
   .competition-map-heading, .competition-map-footer { padding: 15px; }
   .competition-map-footer span:last-child { margin-left: 0; width: 100%; }

@@ -1355,9 +1355,14 @@ footer .ft-bottom {
             <span class="eyebrow">Voice of buyer</span>
             <h3>Feedback + level of interest</h3>
           </div>
-          <span class="panel-count" id="feedbackCount">0 notes</span>
+          <div class="feedback-controls">
+            <span class="panel-count" id="feedbackCount">0 notes</span>
+            <span class="feedback-position" id="feedbackPosition" aria-live="polite">0 of 0</span>
+            <button type="button" id="feedbackPrev" aria-label="Previous feedback note" disabled>‹</button>
+            <button type="button" id="feedbackNext" aria-label="Next feedback note" disabled>›</button>
+          </div>
         </div>
-        <div class="card" id="feedbackList">
+        <div class="card feedback-track" id="feedbackList" role="region" aria-label="Buyer feedback notes" tabindex="0">
           <div class="empty-state">No buyer feedback in this reporting period.</div>
         </div>
       </article>
