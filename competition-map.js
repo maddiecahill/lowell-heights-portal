@@ -21,6 +21,7 @@
   let lowellMarker;
   let markers = new Map();
   let revision = 0;
+  let renderer;
 
   const esc = value => String(value ?? "")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -80,17 +81,28 @@
     const marker = markers.get(Number(index));
     if (!marker || !map) return;
     markSelected(index);
-    map.flyTo({ center: marker.getLngLat(), zoom: Math.max(map.getZoom(), 13), duration: 700 });
-    if (!marker.getPopup().isOpen()) marker.togglePopup();
+    if (renderer === "leaflet") {
+      map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 13), { duration: .7 });
+      marker.openPopup();
+    } else {
+      map.flyTo({ center: marker.getLngLat(), zoom: Math.max(map.getZoom(), 13), duration: 700 });
+      if (!marker.getPopup().isOpen()) marker.togglePopup();
+    }
     if (scroll) document.getElementById("competitionMap")?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function fitAll() {
     if (!map || !lowellMarker) return;
-    const bounds = new window.maplibregl.LngLatBounds();
-    bounds.extend(lowellMarker.getLngLat());
-    markers.forEach(marker => bounds.extend(marker.getLngLat()));
-    map.fitBounds(bounds, { padding: 45, maxZoom: 12, duration: 700 });
+    if (renderer === "leaflet") {
+      const bounds = window.L.latLngBounds([lowellMarker.getLatLng()]);
+      markers.forEach(marker => bounds.extend(marker.getLatLng()));
+      map.fitBounds(bounds, { padding: [45, 45], maxZoom: 12, animate: true });
+    } else {
+      const bounds = new window.maplibregl.LngLatBounds();
+      bounds.extend(lowellMarker.getLngLat());
+      markers.forEach(marker => bounds.extend(marker.getLngLat()));
+      map.fitBounds(bounds, { padding: 45, maxZoom: 12, duration: 700 });
+    }
   }
 
   function markerElement(kind, label) {
@@ -104,23 +116,44 @@
 
   function initialize() {
     const element = document.getElementById("competitionMap");
-    if (!element || !window.maplibregl) {
+    if (!element || (!window.maplibregl && !window.L)) {
       if (element) element.innerHTML = '<p class="competition-map-error">Map tiles are unavailable. Use the listing and location links below.</p>';
       return;
     }
-    map = new window.maplibregl.Map({
-      container: element,
-      style: "https://tiles.openfreemap.org/styles/positron",
-      center: [LOWELL.lng, LOWELL.lat],
-      zoom: 11,
-      scrollZoom: false
-    });
-    map.addControl(new window.maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    lowellMarker = new window.maplibregl.Marker({ element: markerElement("home", "Lowell Heights") })
-      .setLngLat([LOWELL.lng, LOWELL.lat])
-      .setPopup(new window.maplibregl.Popup({ offset: 23, maxWidth: "290px" })
-        .setHTML('<div class="competition-popup"><strong>Lowell Heights</strong><span>5814 Lowell Larimer Rd, Everett, WA 98208</span><span>GreenCity Homes</span></div>'))
-      .addTo(map);
+    const homePopup = '<div class="competition-popup"><strong>Lowell Heights</strong><span>5814 Lowell Larimer Rd, Everett, WA 98208</span><span>GreenCity Homes</span></div>';
+    // Raster Positron keeps the map usable where WebGL is disabled.
+    const canvas = document.createElement("canvas");
+    const hasWebGL = !!(canvas.getContext("webgl2") || canvas.getContext("webgl"));
+    if (hasWebGL && window.maplibregl) {
+      try {
+        map = new window.maplibregl.Map({
+          container: element,
+          style: "https://tiles.openfreemap.org/styles/positron",
+          center: [LOWELL.lng, LOWELL.lat],
+          zoom: 11,
+          scrollZoom: false
+        });
+        renderer = "maplibre";
+        map.addControl(new window.maplibregl.NavigationControl({ showCompass: false }), "top-right");
+        lowellMarker = new window.maplibregl.Marker({ element: markerElement("home", "Lowell Heights") })
+          .setLngLat([LOWELL.lng, LOWELL.lat])
+          .setPopup(new window.maplibregl.Popup({ offset: 23, maxWidth: "290px" }).setHTML(homePopup))
+          .addTo(map);
+      } catch (_) { map?.remove(); map = null; element.innerHTML = ""; }
+    }
+    if (!map && window.L) {
+      renderer = "leaflet";
+      map = window.L.map(element, { scrollWheelZoom: false }).setView([LOWELL.lat, LOWELL.lng], 11);
+      window.L.tileLayer("https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+      }).addTo(map);
+      const homeIcon = window.L.divIcon({ className: "competition-leaflet-icon", html: markerElement("home", "Lowell Heights").outerHTML, iconSize: [38, 38], iconAnchor: [19, 19] });
+      lowellMarker = window.L.marker([LOWELL.lat, LOWELL.lng], { icon: homeIcon }).bindPopup(homePopup).addTo(map);
+    }
+    if (!map) {
+      element.innerHTML = '<p class="competition-map-error">Map tiles are unavailable. Use the listing and location links below.</p>';
+      return;
+    }
     fitAll();
     document.getElementById("competitionFitMap")?.addEventListener("click", fitAll);
     document.getElementById("competitionGrid")?.addEventListener("click", event => {
@@ -150,15 +183,22 @@
         return;
       }
       const link = linkFor(row);
-      const marker = new window.maplibregl.Marker({
-        element: markerElement("competitor", `Select ${row["Community Name"]}`)
-      }).setLngLat([point.lng, point.lat])
-        .setPopup(new window.maplibregl.Popup({ offset: 18, maxWidth: "290px" }).setHTML(`<div class="competition-popup"><strong>${esc(row["Community Name"])}</strong>
+      const popup = `<div class="competition-popup"><strong>${esc(row["Community Name"])}</strong>
         <span>${esc(row["Builder"] || "")}</span><span>${esc(row["Community Address"])}</span>
         <span class="competition-popup-distance">${milesFromLowell(point)} mi from Lowell Heights · straight line</span>
-        <a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${link.label} ↗</a></div>`))
-        .addTo(map);
-      marker.getElement().addEventListener("click", () => markSelected(index));
+        <a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${link.label} ↗</a></div>`;
+      let marker;
+      if (renderer === "leaflet") {
+        const icon = window.L.divIcon({ className: "competition-leaflet-icon", html: markerElement("competitor", `Select ${row["Community Name"]}`).outerHTML, iconSize: [32, 32], iconAnchor: [16, 16] });
+        marker = window.L.marker([point.lat, point.lng], { icon }).bindPopup(popup).addTo(map);
+        marker.on("click", () => markSelected(index));
+      } else {
+        marker = new window.maplibregl.Marker({ element: markerElement("competitor", `Select ${row["Community Name"]}`) })
+          .setLngLat([point.lng, point.lat])
+          .setPopup(new window.maplibregl.Popup({ offset: 18, maxWidth: "290px" }).setHTML(popup))
+          .addTo(map);
+        marker.getElement().addEventListener("click", () => markSelected(index));
+      }
       markers.set(index, marker);
       if (button) button.disabled = false;
     });
@@ -166,7 +206,7 @@
     const missing = rows.length - markers.size;
     const count = document.getElementById("competitionMapCount");
     if (count) count.textContent = `${markers.size} of ${rows.length} competitors mapped${missing ? ` · ${missing} need a verified location` : ""}`;
-    window.setTimeout(() => map.resize(), 50);
+    window.setTimeout(() => renderer === "leaflet" ? map.invalidateSize() : map.resize(), 50);
   }
 
   window.LowellCompetitionMap = { update, focus, fitAll };
