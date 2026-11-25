@@ -1065,6 +1065,7 @@ footer .ft-bottom {
 }
 </style>
 <link rel="stylesheet" href="/modern-dashboard.css">
+<link rel="stylesheet" href="/marketing-highlights.css">
 </head>
 <body>
 
@@ -1434,6 +1435,39 @@ footer .ft-bottom {
     </div>
   </section>
 
+
+  <section id="marketing-highlights" class="shell" aria-label="Lowell Heights marketing highlights" data-website-status="pending" data-ads-status="pending">
+    <div class="lh-module">
+      <header class="lh-heading"><div class="lh-eyebrow">Lowell Heights</div><h2>Marketing highlights</h2><p class="lh-context">Brook &amp; Jill’s website · Cumulative campaign reporting</p></header>
+      <div class="lh-highlights" aria-label="Headline marketing highlights">
+        <div class="lh-box"><div class="lh-label">Ad impressions</div><div class="lh-value" data-metric="impressions">—</div><div class="lh-caption">Times Lowell ads shown</div></div>
+        <div class="lh-box"><div class="lh-label">People reached</div><div class="lh-value" data-metric="reach">—</div><div class="lh-caption">Unique Meta accounts</div></div>
+        <div class="lh-box"><div class="lh-label">Link clicks</div><div class="lh-value" data-metric="linkClicks">—</div><div class="lh-caption">Clicks from Lowell ads</div></div>
+        <div class="lh-box"><div class="lh-label">Website visits</div><div class="lh-value" data-metric="sessions">—</div><div class="lh-caption" data-metric="websiteCaption">Awaiting website connection</div></div>
+      </div>
+      <div class="lh-tabs" role="tablist" aria-label="Marketing detail views">
+        <button type="button" class="lh-tab" id="lh-ads-tab" role="tab" aria-controls="lh-ads-panel" aria-selected="true" tabindex="0">Ads &amp; Traffic</button>
+        <button type="button" class="lh-tab" id="lh-quality-tab" role="tab" aria-controls="lh-quality-panel" aria-selected="false" tabindex="-1">Traffic Quality</button>
+      </div>
+      <div id="lh-ads-panel" role="tabpanel" aria-labelledby="lh-ads-tab">
+        <div class="lh-detail-grid"><div>
+          <h3>Ad engagement</h3><div class="lh-period" data-metric="adsPeriod">Cumulative campaign reporting</div>
+          <div class="lh-detail-line"><span>Landing page views from ads</span><strong data-metric="landingPageViews">—</strong></div>
+          <div class="lh-detail-line"><span>Unique website visitors · GA4</span><strong data-metric="totalUsers">—</strong></div>
+          <div class="lh-period" data-metric="adsCaption">Awaiting ad connection</div>
+        </div><div>
+          <h3>Website traffic sources</h3><div class="lh-period" data-metric="websitePeriod">Cumulative campaign reporting</div>
+          <div id="lh-source-bars"><p class="lh-pending">Traffic sources will appear when website reporting is connected.</p></div>
+        </div></div>
+        <p class="lh-footnote" data-metric="websiteNote">Website visits are sessions starting on Brook &amp; Jill’s Lowell Heights community page. Facebook / Instagram includes paid and organic traffic.</p>
+      </div>
+      <div id="lh-quality-panel" role="tabpanel" aria-labelledby="lh-quality-tab" hidden>
+        <h3>How visitors engage</h3><div class="lh-period" data-metric="websitePeriod">Cumulative campaign reporting</div>
+        <table class="lh-quality-table"><thead><tr><th scope="col">Traffic source</th><th scope="col">Visits</th><th scope="col">Engagement</th><th scope="col">Average visit</th></tr></thead><tbody id="lh-quality-rows"><tr><td colspan="4" class="lh-pending">Visitor engagement will appear when website reporting is connected.</td></tr></tbody></table>
+      </div>
+      <div class="lh-preview-caption" role="status" aria-live="polite" data-metric="connection">Checking website and ad connections…</div>
+    </div>
+  </section>
 
   <!-- Marketing -->
   <section id="marketing" class="section shell" style="padding-bottom: 96px;">
@@ -2978,6 +3012,7 @@ applyRange = function(
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/competition-map.js"></script>
 <script src="/modern-dashboard.js"></script>
+<script src="/marketing-highlights.js"></script>
 
 </body>
 </html>
